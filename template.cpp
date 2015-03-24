@@ -21,6 +21,7 @@
 #include <string>
 #include <algorithm>
 #include "tree.hh"
+#include "space.h"
 
 using namespace std;
 
