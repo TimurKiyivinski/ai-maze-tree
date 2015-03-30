@@ -20,6 +20,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <vector>
 #include "tree.hh"
 #include "space.h"
 
@@ -41,6 +42,24 @@ bool check_file(string file_name)
 
 int program_main(string file_name)
 {
+    // Loads map file
+    ifstream map_file(file_name);
+    int i(0);
+    string map_line;
+    vector<vector<Space*>> space_matrix;
+    // Get map data, line by line
+    while (getline(map_file, map_line))
+    {
+        // Loop every line on the map
+        for (int ii(0); ii < map_line.length(); ii++)
+        {
+            if (map_line[ii] == '#')
+                space_matrix[i].push_back(NULL);
+            else
+                space_matrix[i].push_back(new Space(i, ii));
+        }
+        i++;
+    }
 #ifdef BFS
     cout << "BFS" << endl;
 #endif
