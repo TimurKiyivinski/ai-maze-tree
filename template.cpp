@@ -42,24 +42,58 @@ bool check_file(string file_name)
 
 int program_main(string file_name)
 {
+    // Function scope variables:
     // Loads map file
     ifstream map_file(file_name);
+    // Loop counters
     int i(0);
-    string map_line;
+    int ii(0);
+    // Space matrix
     vector<vector<Space*>> space_matrix;
+    // Map Start & Finish
+    Space* space_start = NULL;
+    Space* space_finish = NULL;
+
+    /* *
+     * Section: Load map
+     *
+     * Populates the map matrix with discovered
+     * Spaces as well as find the start & finish
+     * point of the maze.
+     * */
+    // Temporarily stores map lines
+    string map_line;
     // Get map data, line by line
     while (getline(map_file, map_line))
     {
         // Loop every line on the map
-        for (int ii(0); ii < map_line.length(); ii++)
+        vector<Space*> line_vector;
+        for (ii = 0; ii < map_line.length(); ii++)
         {
-            if (map_line[ii] == '#')
-                space_matrix[i].push_back(NULL);
-            else
-                space_matrix[i].push_back(new Space(i, ii));
+            if (map_line[ii] == ' ')
+                line_vector.push_back(NULL);
+            else if (map_line[ii] == 'S')
+            {
+                space_start = new Space(i, ii, 'S');
+                line_vector.push_back(space_start);
+            }
+            else if (map_line[ii] == 'F')
+            {
+                space_finish = new Space(i, ii, 'F');
+                line_vector.push_back(space_finish);
+            }
+            else if (map_line[ii] == ' ')
+                line_vector.push_back(new Space(i, ii));
         }
+        space_matrix.push_back(line_vector);
         i++;
     }
+
+    /* *
+     * Section: Algorithm
+     *
+     * Different algorithm sections
+     * */
 #ifdef BFS
     cout << "BFS" << endl;
 #endif
@@ -78,6 +112,17 @@ int program_main(string file_name)
 #ifdef HS
     cout << "HS" << endl;
 #endif
+    
+    /* *
+     * Section: Clearing up
+     *
+     * Clear up memory
+     * */
+    for (i = 0; i < space_matrix.size(); i++)
+        for (ii = 0; ii < space_matrix[i].size(); ii++)
+            if (space_matrix[i][ii] != NULL)
+                delete(space_matrix[i][ii]);
+    return EXIT_SUCCESS;
 }
 
 /* *
