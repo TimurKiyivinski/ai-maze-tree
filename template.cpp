@@ -50,6 +50,8 @@ int program_main(string file_name)
     int ii(0);
     // Space matrix
     vector<vector<Space*>> space_matrix;
+    // Space tree
+    tree<Space*> space_tree;
     // Map Start & Finish
     Space* space_start = NULL;
     Space* space_finish = NULL;
@@ -88,6 +90,16 @@ int program_main(string file_name)
         space_matrix.push_back(line_vector);
         i++;
     }
+
+    /* *
+     * Section: Create Tree
+     *
+     * Use the Space matrix to populate the tree
+     * by checking surrounding points in the matrix
+     * */
+    tree<Space*>::iterator space_root;
+    space_root = space_tree.begin();
+    space_tree.insert(space_root, space_start);
 
     /* *
      * Section: Algorithm
