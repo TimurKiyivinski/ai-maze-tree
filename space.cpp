@@ -19,9 +19,9 @@ Space::~Space()
 {
 }
 
-Space::is_start(){ return type == 's' || type == 'S';}
+bool Space::is_start(){ return type == 's' || type == 'S';}
 
-Space::is_finish(){ return type == 'f' || type == 'F';}
+bool Space::is_finish(){ return type == 'f' || type == 'F';}
 
 bool Space::is_parent(Space *s)
 {
