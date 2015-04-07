@@ -21,8 +21,9 @@ class Space
         bool is_start();
         // Returns type if type is finish
         bool is_finish();
-        // Returns true if a Space is a parent node
-        bool is_parent(Space* s);
-        // Adds Space as child node in tree
-        void add_child(Space* s);
+        // Get coordinates
+        int getX();
+        int getY();
+        // Easier to compare
+        bool operator==(Space& _compare_space);
 };

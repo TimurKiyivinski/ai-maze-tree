@@ -23,11 +23,15 @@ bool Space::is_start(){ return type == 's' || type == 'S';}
 
 bool Space::is_finish(){ return type == 'f' || type == 'F';}
 
-bool Space::is_parent(Space *s)
+int Space::getX() { return x; }
+
+int Space::getY() { return y; }
+
+bool Space::operator==(Space& _compare_space)
 {
-    return false;
+    return
+        x == _compare_space.getX()
+        &&
+        y == _compare_space.getY();
 }
 
-void Space::add_child(Space *s)
-{
-}
