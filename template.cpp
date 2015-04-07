@@ -40,6 +40,119 @@ bool check_file(string file_name)
     return map_file.good();
 }
 
+tree<string>::iterator get_parent(tree<string> *tr, tree<string>::iterator *node)
+{
+    return tr->parent(*node);
+}
+
+vector<tree<string>::iterator> get_parents(tree<string> *tr, tree<string>::iterator *node)
+{
+    // Load parents
+    vector<tree<string>::iterator> _parents;
+    if (**node != "A")
+    {
+        tree<string>::iterator parent;
+        parent = tr->parent(*node);
+        _parents.push_back(parent);
+        while (parent != tr->begin())
+        {
+            parent = get_parent(tr, &parent);
+            _parents.push_back(parent);
+        }
+    }
+    return _parents;
+}
+
+bool construct_tree(
+        vector<string> map,
+        tree<string> *tr,
+        tree<string>::iterator *node,
+        int x,
+        int y)
+{
+    
+    // Add children
+    if (x < map.size() - 1)     if (map[x+1][y] != '#')
+    {
+        vector<tree<string>::iterator> _parents = get_parents(tr, node);
+        tree<string>::iterator child;
+        Space *_c = map[x+1][y];
+        // Only add if node is not a parent
+        bool b_add(true);
+        for (tree<string>::iterator parent: _parents)
+        {
+            if (*parent == *_c)
+            {
+                b_add = false;
+            }
+        }
+        if (b_add)
+        {
+            child = tr->append_child(*node, _c);
+            construct_tree(map, tr, &child, x+1, y);
+        }
+    }
+    if (x > 0)                  if (map[x-1][y] != '#')
+    {
+        // Load parents
+        vector<tree<string>::iterator> _parents = get_parents(tr, node);
+        tree<string>::iterator child;
+        Space *_c = map[x-1][y];
+        // Only add if node is not a parent
+        bool b_add(true);
+        for (tree<string>::iterator parent: _parents)
+        {
+            if (*parent == *_c)
+            {
+                b_add = false;
+            }
+        }
+        if (b_add)
+        {
+            child = tr->append_child(*node, _c);
+            construct_tree(map, tr, &child, x-1, y);
+        }
+    }
+    if (y < map[0].length() -1) if (map[x][y+1] != '#')
+    {
+        // Load parents
+        vector<tree<string>::iterator> _parents = get_parents(tr, node);
+        tree<string>::iterator child;
+        Space *_c = map[x][y+1];
+        // Only add if node is not a parent
+        bool b_add(true);
+        for (tree<string>::iterator parent: _parents)
+        {
+            if (*parent == *_c)
+                b_add = false;
+        }
+        if (b_add)
+        {
+            child = tr->append_child(*node, _c);
+            construct_tree(map, tr, &child, x, y+1);
+        }
+    }
+    if (y > 0)                  if (map[x][y-1] != '#')
+    {
+        // Load parents
+        vector<tree<string>::iterator> _parents = get_parents(tr, node);
+        tree<string>::iterator child;
+        Space *_c = map[x][y-1];
+        // Only add if node is not a parent
+        bool b_add(true);
+        for (tree<string>::iterator parent: _parents)
+        {
+            if (*parent == *_c)
+                b_add = false;
+        }
+        if (b_add)
+        {
+            child = tr->append_child(*node, _c);
+            construct_tree(map, tr, &child, x, y-1);
+        }
+    }
+}
+
 int program_main(string file_name)
 {
     // Function scope variables:
@@ -97,9 +210,10 @@ int program_main(string file_name)
      * Use the Space matrix to populate the tree
      * by checking surrounding points in the matrix
      * */
-    tree<Space*>::iterator space_root;
+    tree<Space*>::iterator space_root, root_node;
     space_root = space_tree.begin();
-    space_tree.insert(space_root, space_start);
+    root_node = space_tree.insert(space_root, space_start);
+    construct_tree(map, &space_tree, &root_node, space_start.getX(), space_start.getY();
 
     /* *
      * Section: Algorithm
