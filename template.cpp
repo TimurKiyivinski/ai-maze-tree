@@ -40,18 +40,18 @@ bool check_file(string file_name)
     return map_file.good();
 }
 
-tree<string>::iterator get_parent(tree<string> *tr, tree<string>::iterator *node)
+tree<Space*>::iterator get_parent(tree<Space*> *tr, tree<Space*>::iterator *node)
 {
     return tr->parent(*node);
 }
 
-vector<tree<string>::iterator> get_parents(tree<string> *tr, tree<string>::iterator *node)
+vector<tree<Space*>::iterator> get_parents(tree<Space*> *tr, tree<Space*>::iterator *node)
 {
     // Load parents
-    vector<tree<string>::iterator> _parents;
-    if (**node != "A")
+    vector<tree<Space*>::iterator> _parents;
+    if (! (**node)->is_start())
     {
-        tree<string>::iterator parent;
+        tree<Space*>::iterator parent;
         parent = tr->parent(*node);
         _parents.push_back(parent);
         while (parent != tr->begin())
@@ -64,24 +64,33 @@ vector<tree<string>::iterator> get_parents(tree<string> *tr, tree<string>::itera
 }
 
 bool construct_tree(
-        vector<string> map,
-        tree<string> *tr,
-        tree<string>::iterator *node,
+        vector<vector<Space*>> map,
+        tree<Space*> *tr,
+        tree<Space*>::iterator *node,
         int x,
         int y)
 {
-    
-    // Add children
-    if (x < map.size() - 1)     if (map[x+1][y] != '#')
+    cout << x << " " << y << endl;
+    if (x < map.size() - 1)
     {
-        vector<tree<string>::iterator> _parents = get_parents(tr, node);
-        tree<string>::iterator child;
+        cout << "1" << endl;
+        if (map[x+1][y] != NULL)
+        {
+            cout << "2" << endl;
+        }
+    }
+    // Add children
+    if (x < map.size() - 1)     if (map[x+1][y] != NULL)
+    {
+        cout << "x+1" << endl;
+        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
+        tree<Space*>::iterator child;
         Space *_c = map[x+1][y];
         // Only add if node is not a parent
         bool b_add(true);
-        for (tree<string>::iterator parent: _parents)
+        for (tree<Space*>::iterator parent: _parents)
         {
-            if (*parent == *_c)
+            if (*parent == _c)
             {
                 b_add = false;
             }
@@ -92,17 +101,18 @@ bool construct_tree(
             construct_tree(map, tr, &child, x+1, y);
         }
     }
-    if (x > 0)                  if (map[x-1][y] != '#')
+    if (x > 0)                  if (map[x-1][y] != NULL)
     {
+        cout << "x-1" << endl;
         // Load parents
-        vector<tree<string>::iterator> _parents = get_parents(tr, node);
-        tree<string>::iterator child;
+        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
+        tree<Space*>::iterator child;
         Space *_c = map[x-1][y];
         // Only add if node is not a parent
         bool b_add(true);
-        for (tree<string>::iterator parent: _parents)
+        for (tree<Space*>::iterator parent: _parents)
         {
-            if (*parent == *_c)
+            if (*parent == _c)
             {
                 b_add = false;
             }
@@ -113,17 +123,18 @@ bool construct_tree(
             construct_tree(map, tr, &child, x-1, y);
         }
     }
-    if (y < map[0].length() -1) if (map[x][y+1] != '#')
+    if (y < map[0].size() -1) if (map[x][y+1] != NULL)
     {
+        cout << "y+1" << endl;
         // Load parents
-        vector<tree<string>::iterator> _parents = get_parents(tr, node);
-        tree<string>::iterator child;
+        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
+        tree<Space*>::iterator child;
         Space *_c = map[x][y+1];
         // Only add if node is not a parent
         bool b_add(true);
-        for (tree<string>::iterator parent: _parents)
+        for (tree<Space*>::iterator parent: _parents)
         {
-            if (*parent == *_c)
+            if (*parent == _c)
                 b_add = false;
         }
         if (b_add)
@@ -132,17 +143,18 @@ bool construct_tree(
             construct_tree(map, tr, &child, x, y+1);
         }
     }
-    if (y > 0)                  if (map[x][y-1] != '#')
+    if (y > 0)                  if (map[x][y-1] != NULL)
     {
+        cout << "y-1" << endl;
         // Load parents
-        vector<tree<string>::iterator> _parents = get_parents(tr, node);
-        tree<string>::iterator child;
+        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
+        tree<Space*>::iterator child;
         Space *_c = map[x][y-1];
         // Only add if node is not a parent
         bool b_add(true);
-        for (tree<string>::iterator parent: _parents)
+        for (tree<Space*>::iterator parent: _parents)
         {
-            if (*parent == *_c)
+            if (*parent == _c)
                 b_add = false;
         }
         if (b_add)
@@ -185,7 +197,7 @@ int program_main(string file_name)
         vector<Space*> line_vector;
         for (ii = 0; ii < map_line.length(); ii++)
         {
-            if (map_line[ii] == ' ')
+            if (map_line[ii] == '#')
                 line_vector.push_back(NULL);
             else if (map_line[ii] == 'S')
             {
@@ -213,7 +225,7 @@ int program_main(string file_name)
     tree<Space*>::iterator space_root, root_node;
     space_root = space_tree.begin();
     root_node = space_tree.insert(space_root, space_start);
-    construct_tree(map, &space_tree, &root_node, space_start.getX(), space_start.getY();
+    construct_tree(space_matrix, &space_tree, &root_node, space_start->getX(), space_start->getY());
 
     /* *
      * Section: Algorithm

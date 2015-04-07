@@ -27,11 +27,18 @@ int Space::getX() { return x; }
 
 int Space::getY() { return y; }
 
-bool Space::operator==(Space& _compare_space)
+bool Space::operator==(Space* _compare_space)
 {
-    return
-        x == _compare_space.getX()
-        &&
-        y == _compare_space.getY();
+    int X, Y;
+    try
+    {
+        X = _compare_space->getX();
+        Y = _compare_space->getY();
+    }
+    catch(...)
+    {
+        return false;
+    }
+    return x == X && y == Y;
 }
 

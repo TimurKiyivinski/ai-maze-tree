@@ -25,5 +25,5 @@ class Space
         int getX();
         int getY();
         // Easier to compare
-        bool operator==(Space& _compare_space);
+        bool operator==(Space* _compare_space);
 };
