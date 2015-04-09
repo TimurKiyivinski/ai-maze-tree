@@ -1,4 +1,5 @@
 #include "space.h"
+#include <string>
 
 Space::Space():
     x(0), y(0), type('#')
@@ -29,16 +30,5 @@ int Space::getY() { return y; }
 
 bool Space::operator==(Space* _compare_space)
 {
-    int X, Y;
-    try
-    {
-        X = _compare_space->getX();
-        Y = _compare_space->getY();
-    }
-    catch(...)
-    {
-        return false;
-    }
-    return x == X && y == Y;
+    return x == _compare_space->getX() && y == _compare_space->getY();
 }
-

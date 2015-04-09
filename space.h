@@ -1,3 +1,5 @@
+#ifndef SPACE_H
+#define SPACE_H
 class Space;
 class Space
 {
@@ -27,3 +29,4 @@ class Space
         // Easier to compare
         bool operator==(Space* _compare_space);
 };
+#endif
