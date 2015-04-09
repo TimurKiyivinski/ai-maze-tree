@@ -70,19 +70,9 @@ bool construct_tree(
         int x,
         int y)
 {
-    cout << x << " " << y << endl;
-    if (x < map.size() - 1)
-    {
-        cout << "1" << endl;
-        if (map[x+1][y] != NULL)
-        {
-            cout << "2" << endl;
-        }
-    }
     // Add children
     if (x < map.size() - 1)     if (map[x+1][y] != NULL)
     {
-        cout << "x+1" << endl;
         vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
         tree<Space*>::iterator child;
         Space *_c = map[x+1][y];
@@ -103,7 +93,6 @@ bool construct_tree(
     }
     if (x > 0)                  if (map[x-1][y] != NULL)
     {
-        cout << "x-1" << endl;
         // Load parents
         vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
         tree<Space*>::iterator child;
@@ -125,7 +114,6 @@ bool construct_tree(
     }
     if (y < map[0].size() -1) if (map[x][y+1] != NULL)
     {
-        cout << "y+1" << endl;
         // Load parents
         vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
         tree<Space*>::iterator child;
@@ -145,7 +133,6 @@ bool construct_tree(
     }
     if (y > 0)                  if (map[x][y-1] != NULL)
     {
-        cout << "y-1" << endl;
         // Load parents
         vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
         tree<Space*>::iterator child;
@@ -232,22 +219,34 @@ int program_main(string file_name)
      *
      * Different algorithm sections
      * */
-#ifdef BFS
+#ifdef ALGO_BFS
     cout << "BFS" << endl;
+    tree<Space*>::breadth_first_queued_iterator BFS(root_node);
+    while (BFS != root_node.end())
+    {
+        cout << (*BFS)->getX() << " " << (*BFS)->getY() << endl;
+        BFS++;
+    }
 #endif
-#ifdef DFS
+#ifdef ALGO_DFS
     cout << "DFS" << endl;
+    tree<Space*>::pre_order_iterator DFS(root_node);
+    while (DFS != root_node.end())
+    {
+        cout << (*DFS)->getX() << " " << (*DFS)->getY() << endl;
+        DFS++;
+    }
 #endif
-#ifdef GBFS
+#ifdef ALGO_GBFS
     cout << "GBFS" << endl;
 #endif
-#ifdef BS
+#ifdef ALGO_BS
     cout << "BS" << endl;
 #endif
-#ifdef ASS
+#ifdef ALGO_ASS
     cout << "ASS" << endl;
 #endif
-#ifdef HS
+#ifdef ALGO_HS
     cout << "HS" << endl;
 #endif
     

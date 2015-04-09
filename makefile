@@ -10,7 +10,7 @@ OBJECTS = $(TARGET).o space.o
 
 #Do not modify
 $(TARGET) : $(OBJECTS)
-		$(CC) $(CFLAGS) $(OBJECTS) -o $(TARGET).bin
+		$(CC) $(CFLAGS) $(OBJECTS) -o $(TARGET).bin $(EXTRA)
 
 #%.c or %.cpp
 %.o : %.cpp
