@@ -71,27 +71,7 @@ bool construct_tree(
         int y)
 {
     // Add children
-    if (x < map.size() - 1)     if (map[x+1][y] != NULL)
-    {
-        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
-        tree<Space*>::iterator child;
-        Space *_c = map[x+1][y];
-        // Only add if node is not a parent
-        bool b_add(true);
-        for (tree<Space*>::iterator parent: _parents)
-        {
-            if (*parent == _c)
-            {
-                b_add = false;
-            }
-        }
-        if (b_add)
-        {
-            child = tr->append_child(*node, _c);
-            construct_tree(map, tr, &child, x+1, y);
-        }
-    }
-    if (x > 0)                  if (map[x-1][y] != NULL)
+    if (x > 0)                  if (map[x-1][y] != NULL) // Up
     {
         // Load parents
         vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
@@ -112,26 +92,7 @@ bool construct_tree(
             construct_tree(map, tr, &child, x-1, y);
         }
     }
-    if (y < map[0].size() -1) if (map[x][y+1] != NULL)
-    {
-        // Load parents
-        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
-        tree<Space*>::iterator child;
-        Space *_c = map[x][y+1];
-        // Only add if node is not a parent
-        bool b_add(true);
-        for (tree<Space*>::iterator parent: _parents)
-        {
-            if (*parent == _c)
-                b_add = false;
-        }
-        if (b_add)
-        {
-            child = tr->append_child(*node, _c);
-            construct_tree(map, tr, &child, x, y+1);
-        }
-    }
-    if (y > 0)                  if (map[x][y-1] != NULL)
+    if (y > 0)                  if (map[x][y-1] != NULL) // Left
     {
         // Load parents
         vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
@@ -148,6 +109,46 @@ bool construct_tree(
         {
             child = tr->append_child(*node, _c);
             construct_tree(map, tr, &child, x, y-1);
+        }
+    }
+    if (x < map.size() - 1)     if (map[x+1][y] != NULL) // Down
+    {
+        // Load parents
+        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
+        tree<Space*>::iterator child;
+        Space *_c = map[x+1][y];
+        // Only add if node is not a parent
+        bool b_add(true);
+        for (tree<Space*>::iterator parent: _parents)
+        {
+            if (*parent == _c)
+            {
+                b_add = false;
+            }
+        }
+        if (b_add)
+        {
+            child = tr->append_child(*node, _c);
+            construct_tree(map, tr, &child, x+1, y);
+        }
+    }
+    if (y < map[0].size() -1) if (map[x][y+1] != NULL) // Right
+    {
+        // Load parents
+        vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
+        tree<Space*>::iterator child;
+        Space *_c = map[x][y+1];
+        // Only add if node is not a parent
+        bool b_add(true);
+        for (tree<Space*>::iterator parent: _parents)
+        {
+            if (*parent == _c)
+                b_add = false;
+        }
+        if (b_add)
+        {
+            child = tr->append_child(*node, _c);
+            construct_tree(map, tr, &child, x, y+1);
         }
     }
 }
