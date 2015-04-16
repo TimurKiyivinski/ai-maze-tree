@@ -21,10 +21,17 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <SFML/Graphics.hpp>
 #include "tree.hh"
 #include "space.h"
 
 using namespace std;
+
+void render_thread(sf::RenderWindow* window, vector<vector<Space*>>* space_matrix, Space* space_robot)
+{
+    // Run loop while window is open
+    // and space robot is not finished
+}
 
 /* *
  * Cross platform way to check if
@@ -168,6 +175,8 @@ int program_main(string file_name)
     // Map Start & Finish
     Space* space_start = NULL;
     Space* space_finish = NULL;
+    // Map size
+    int _width, _height;
 
     /* *
      * Section: Load map
@@ -203,6 +212,8 @@ int program_main(string file_name)
         space_matrix.push_back(line_vector);
         i++;
     }
+    _width = ii * 10;
+    _height = i * 10;
 
     /* *
      * Section: Create Tree
@@ -216,43 +227,124 @@ int program_main(string file_name)
     construct_tree(space_matrix, &space_tree, &root_node, space_start->getX(), space_start->getY());
 
     /* *
-     * Section: Algorithm
+     * Section: Graphics
      *
-     * Different algorithm sections
+     * Use SFML to draw graphics in a separate thread
      * */
-#ifdef ALGO_BFS
-    cout << "BFS" << endl;
-    tree<Space*>::breadth_first_queued_iterator BFS(root_node);
-    while (BFS != root_node.end())
+    // Create inital Window
+    sf::RenderWindow window(sf::VideoMode(_width, _height), "AI");
+    // Optimal speed to view results
+    window.setFramerateLimit(60); 
+    // Robot begins at starting space
+    Space *space_robot = space_start;
+    // Initial frame counters, explained below
+    int init_frame_count(0);
+    // Maze solved boolean
+    bool _finished(false);
+    // Window draw loop 
+    while (window.isOpen())
     {
-        cout << ((*BFS))->getX() << " " << (*BFS)->getY() << endl;
-        if (*BFS->is_finish()) break;
-        BFS++;
-    }
+        // Handle window closing events
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+        
+        // If the maze is solved, don't redraw it
+        if (_finished) continue;
+
+        // Draw the maze
+        for (int i(0); i < space_matrix.size(); i++)
+        for (int ii(0); ii < space_matrix[i].size(); ii++)
+        {
+            sf::RectangleShape shape(sf::Vector2f(10, 10));
+            shape.setPosition(sf::Vector2f(ii * 10, i * 10));
+            Space *_c = space_matrix[i][ii];
+            if (_c == NULL)
+                shape.setFillColor(sf::Color(255, 255, 255));
+            else if (_c->is_start())
+                shape.setFillColor(sf::Color(0, 250, 0));
+            else if (_c->is_finish())
+                shape.setFillColor(sf::Color(0, 0, 250));
+            else
+                shape.setFillColor(sf::Color(0, 0, 0));
+            window.draw(shape);
+        }
+        
+        // Draw out robot
+        sf::RectangleShape robot_shape(sf::Vector2f(10, 10));
+        robot_shape.setFillColor(sf::Color(250, 0, 0));
+        robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+        window.draw(robot_shape);
+        window.display();
+        
+        // Skip first 60 frames to avoid initial
+        // artifacts that form on startup
+        if (init_frame_count < 60)
+        {
+            window.clear();
+            init_frame_count++;
+            continue;
+        }
+
+        /* *
+         * Section: Algorithm
+         *
+         * Different algorithm sections
+         * */
+#ifdef ALGO_BFS
+        cout << "BFS" << endl;
+        tree<Space*>::breadth_first_queued_iterator BFS(root_node);
+        while (BFS != root_node.end())
+        {
+            space_robot = *BFS;
+            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+            window.draw(robot_shape);
+            window.display();
+            cout << space_robot->getX() << " " << space_robot->getY() << endl;
+            if ((*BFS)->is_finish())
+            {
+                _finished = true;
+                break;
+            }
+            BFS++;
+        }
 #endif
 #ifdef ALGO_DFS
-    cout << "DFS" << endl;
-    tree<Space*>::pre_order_iterator DFS(root_node);
-    while (DFS != root_node.end())
-    {
-        cout << (*DFS)->getX() << " " << (*DFS)->getY() << endl;
-        if ((*DFS)->is_finish()) break;
-        DFS++;
-    }
+        cout << "DFS" << endl;
+        tree<Space*>::pre_order_iterator DFS(root_node);
+        while (DFS != root_node.end())
+        {
+            space_robot = *DFS;
+            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+            window.draw(robot_shape);
+            window.display();
+            cout << space_robot->getX() << " " << space_robot->getY() << endl;
+            if ((*DFS)->is_finish())
+            {
+                _finished = true;
+                break;
+            }
+            DFS++;
+        }
 #endif
 #ifdef ALGO_GBFS
-    cout << "GBFS" << endl;
+        cout << "GBFS" << endl;
 #endif
 #ifdef ALGO_BS
-    cout << "BS" << endl;
+        cout << "BS" << endl;
 #endif
 #ifdef ALGO_ASS
-    cout << "ASS" << endl;
+        cout << "ASS" << endl;
 #endif
 #ifdef ALGO_HS
-    cout << "HS" << endl;
+        cout << "HS" << endl;
 #endif
-    
+        if (!_finished) window.clear();
+    }
+
     /* *
      * Section: Clearing up
      *
