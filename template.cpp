@@ -224,7 +224,8 @@ int program_main(string file_name)
     tree<Space*>::breadth_first_queued_iterator BFS(root_node);
     while (BFS != root_node.end())
     {
-        cout << (*BFS)->getX() << " " << (*BFS)->getY() << endl;
+        cout << ((*BFS))->getX() << " " << (*BFS)->getY() << endl;
+        if (*BFS->is_finish()) break;
         BFS++;
     }
 #endif
@@ -234,6 +235,7 @@ int program_main(string file_name)
     while (DFS != root_node.end())
     {
         cout << (*DFS)->getX() << " " << (*DFS)->getY() << endl;
+        if ((*DFS)->is_finish()) break;
         DFS++;
     }
 #endif
