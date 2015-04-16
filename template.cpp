@@ -21,10 +21,40 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <SFML/Graphics.hpp>
 #include "tree.hh"
 #include "space.h"
 
 using namespace std;
+
+void render_thread(sf::RenderWindow* window, vector<vector<Space*>>* space_matrix)
+{
+    // the rendering loop
+    while (window->isOpen())
+    {
+        sf::Event event;
+        while (window->pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window->close();
+        }
+        for (int i(0); i < (*space_matrix).size(); i++)
+        for (int ii(0); ii < (*space_matrix)[i].size(); ii++)
+        {
+            cout << i << " " << ii << endl;
+            sf::RectangleShape shape(sf::Vector2f(10, 10));
+            shape.setPosition(sf::Vector2f(ii * 10, i * 10));
+            Space *_c = (*space_matrix)[i][ii];
+            if (_c == NULL)
+                shape.setFillColor(sf::Color(100, 250, 50));
+            else
+                shape.setFillColor(sf::Color(200, 250, 250));
+            window->draw(shape);
+        }
+        window->display();
+        window->clear();
+    }
+}
 
 /* *
  * Cross platform way to check if
@@ -167,6 +197,8 @@ int program_main(string file_name)
     // Map Start & Finish
     Space* space_start = NULL;
     Space* space_finish = NULL;
+    // Map size
+    int _width, _height;
 
     /* *
      * Section: Load map
@@ -202,6 +234,8 @@ int program_main(string file_name)
         space_matrix.push_back(line_vector);
         i++;
     }
+    _width = ii * 10;
+    _height = i * 10;
 
     /* *
      * Section: Create Tree
@@ -214,6 +248,21 @@ int program_main(string file_name)
     root_node = space_tree.insert(space_root, space_start);
     construct_tree(space_matrix, &space_tree, &root_node, space_start->getX(), space_start->getY());
 
+    /* *
+     * Section: Graphics
+     *
+     * Use SFML to draw graphics in a separate thread
+     * */
+    sf::RenderWindow window(sf::VideoMode(_width, _height), "AI");
+    window.setActive(false);
+    sf::Thread thread(std::bind(&render_thread, &window, &space_matrix));
+    thread.launch();
+    while (window.isOpen())
+    {
+        cout << "x" << endl;
+    }
+    cout << "xx" << endl;
+    
     /* *
      * Section: Algorithm
      *
