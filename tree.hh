@@ -107,6 +107,9 @@ class tree {
             /// When called, the next increment/decrement skips children of this node.
 				void         skip_children();
 				void         skip_children(bool skip);
+                
+                // Returns the node contained by an iterator
+                tree_node_<T> get_node(); 
 				/// Number of children of the node pointed to by the iterator.
 				unsigned int number_of_children() const;
 
@@ -2064,6 +2067,12 @@ template <class T, class tree_node_allocator>
 void tree<T, tree_node_allocator>::iterator_base::skip_children(bool skip)
    {
    skip_current_children_=skip;
+   }
+
+template <class T, class tree_node_allocator>
+tree_node_<T> tree<T, tree_node_allocator>::iterator_base::get_node()
+   {
+       return *node;
    }
 
 template <class T, class tree_node_allocator>

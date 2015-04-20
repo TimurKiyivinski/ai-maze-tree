@@ -275,7 +275,9 @@ int program_main(string file_name)
         
         // Draw out robot
         sf::RectangleShape robot_shape(sf::Vector2f(10, 10));
+        sf::RectangleShape robot_parent(sf::Vector2f(10, 10));
         robot_shape.setFillColor(sf::Color(250, 0, 0));
+        robot_parent.setFillColor(sf::Color(250, 0, 250));
         robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
         window.draw(robot_shape);
         window.display();
@@ -307,6 +309,27 @@ int program_main(string file_name)
             if ((*BFS)->is_finish())
             {
                 _finished = true;
+                // Get finished node
+                tree_node_<Space*> solution_node = BFS.get_node();
+                // Iterate parents
+                tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                // Count steps required
+                int steps(1);
+                while(!solution_node_parent->data->is_start())
+                {
+                    robot_parent.setPosition(sf::Vector2f(
+                                solution_node_parent->data->getY() * 10,
+                                solution_node_parent->data->getX() * 10));
+                    window.draw(robot_parent);
+                    window.display();
+                    cout << solution_node_parent->data->getX()
+                         << " "
+                         << solution_node_parent->data->getY()
+                         << endl;
+                    solution_node_parent= solution_node_parent->parent;
+                    steps++;
+                }
+                cout << "Required steps: " << steps << endl;
                 break;
             }
             BFS++;
@@ -325,6 +348,27 @@ int program_main(string file_name)
             if ((*DFS)->is_finish())
             {
                 _finished = true;
+                // Get finished node
+                tree_node_<Space*> solution_node = DFS.get_node();
+                // Iterate parents
+                tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                // Count steps required
+                int steps(1);
+                while(!solution_node_parent->data->is_start())
+                {
+                    robot_parent.setPosition(sf::Vector2f(
+                                solution_node_parent->data->getY() * 10,
+                                solution_node_parent->data->getX() * 10));
+                    window.draw(robot_parent);
+                    window.display();
+                    cout << solution_node_parent->data->getX()
+                         << " "
+                         << solution_node_parent->data->getY()
+                         << endl;
+                    solution_node_parent= solution_node_parent->parent;
+                    steps++;
+                }
+                cout << "Required steps: " << steps << endl;
                 break;
             }
             DFS++;
