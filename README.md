@@ -19,7 +19,9 @@ NA
 
 Resources 
 =========
-tree.hh & tree_util.hh were acquired from http://tree.phi-sci.com/
+tree.hh was acquired from http://tree.phi-sci.com/
+tree.hh was slightly modified for extra requirements, needed to
+simplify the making of this application. As always, it remains GPL.
 
 License 
 =======
