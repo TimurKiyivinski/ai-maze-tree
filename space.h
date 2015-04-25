@@ -8,6 +8,8 @@ class Space
         int x;
         // Y position
         int y;
+        // Space heuristic
+        int h;
         // Start/Fin char
         char type;
     public:
@@ -19,6 +21,8 @@ class Space
         Space(int x, int y, char _type);
         // Destructor
         ~Space();
+        // Sets the space heuristic
+        void set_heuristic(int H);
         // Returns type if type is start
         bool is_start();
         // Returns type if type is finish
@@ -26,7 +30,11 @@ class Space
         // Get coordinates
         int getX();
         int getY();
+        // Gets the space heuristic
+        int get_heuristic();
         // Easier to compare
         bool operator==(Space* _compare_space);
+        bool operator<(Space* _compare_space);
+        bool operator>(Space* _compare_space);
 };
 #endif
