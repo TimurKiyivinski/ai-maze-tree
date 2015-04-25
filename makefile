@@ -11,7 +11,7 @@ OBJECTS = $(TARGET).o space.o
 EXTRA? = ""
 
 #Do not modify
-$(TARGET) : $(OBJECTS)
+$(TARGET) : clean $(OBJECTS)
 	$(CC) $(CFLAGS) $(EXTRA) $(OBJECTS) -o $(TARGET).bin 
 
 #%.c or %.cpp
