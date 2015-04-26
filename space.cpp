@@ -2,17 +2,17 @@
 #include <string>
 
 Space::Space():
-    x(0), y(0), type('#')
+    x(0), y(0), h(-1), type('#')
 {
 }
 
 Space::Space(int X, int Y):
-    x(X), y(Y), type('#')
+    x(X), y(Y), h(-1), type('#')
 {
 }
 
 Space::Space(int X, int Y, char _type):
-    x(X), y(Y), type(_type)
+    x(X), y(Y), h(-1), type(_type)
 {
 }
 
