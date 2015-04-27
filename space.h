@@ -1,3 +1,6 @@
+#include <ostream>
+#include <iostream>
+
 #ifndef SPACE_H
 #define SPACE_H
 class Space;
@@ -36,5 +39,7 @@ class Space
         bool operator==(Space* _compare_space);
         bool operator<(Space* _compare_space);
         bool operator>(Space* _compare_space);
+        friend std::ostream& operator<<(std::ostream &os, const Space &s);
+        friend std::ostream& operator<<(std::ostream &os, const Space *s);
 };
 #endif

@@ -1,5 +1,6 @@
 #include "space.h"
-#include <string>
+#include <ostream>
+#include <iostream>
 
 Space::Space():
     x(0), y(0), h(-1), type('#')
@@ -45,4 +46,16 @@ bool Space::operator<(Space* _compare_space)
 bool Space::operator>(Space* _compare_space)
 {
     return this->get_heuristic() > _compare_space->get_heuristic();
+}
+
+std::ostream& operator<<(std::ostream &os, const Space &s)
+{
+    os << s.x << " " << s.y;
+    return os;
+}
+
+std::ostream& operator<<(std::ostream &os, const Space *s)
+{
+    os << s->x << " " << s->y;
+    return os;
 }

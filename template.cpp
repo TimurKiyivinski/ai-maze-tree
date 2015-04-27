@@ -23,6 +23,7 @@
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include "tree.hh"
+#include "tree_util.hh"
 #include "space.h"
 
 #ifndef ALGO_BFS
@@ -136,7 +137,6 @@ bool construct_tree(
 #ifdef HEURISTICS
     priority_queue<int*, vector<int*>, less<int*>> priority;
     int _up(h), _left(h), _down(h), _right(h);
-    cout << "LOL" << endl;
     if (x > 0)                  if (map[x-1][y] != NULL) // Up
         _up = map[x-1][y]->get_heuristic();
     if (y > 0)                  if (map[x][y-1] != NULL) // Left
@@ -153,14 +153,11 @@ bool construct_tree(
         priority.push(&_down);
     if (_right != h)
         priority.push(&_right);
-    cout << _up << endl;
-    cout << _left << endl;
-    cout << _down << endl;
-    cout << _right << endl;
     while (! priority.empty())
     {
         int *_current = priority.top();
         priority.pop();
+        cout << *_current << endl;
         if (_current == &_up)
         {
             if (x > 0)                  if (map[x-1][y] != NULL) // Up
@@ -362,12 +359,23 @@ int program_main(string file_name)
     {
         Space *_c = space_matrix[i][ii];
         if (_c != NULL)
+        {
             _c->set_heuristic(get_manhattan(
                         space_finish->getX(),
                         space_finish->getY(),
                         _c->getX(),
                         _c->getY()));
+            cout << "Coordinate: " << _c << endl;
+            cout << "Heuristic: " << _c->get_heuristic() << endl;
+        }
     }
+#endif
+    
+#ifdef DEBUG
+    cout << "Debug" << endl;
+    cout << space_start << endl;
+    kptree::print_tree_bracketed(space_tree, cout);
+    cout << endl;
 #endif
 
     /* *
