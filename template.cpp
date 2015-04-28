@@ -305,7 +305,15 @@ int program_main(string file_name)
     cout << "Heuristic Table:" << endl;
     for (int i(0); i < space_matrix.size(); i++)
     {
+        if (i == 0)
+        {
+            cout << "###\t";
+            for (int ii(0); ii < space_matrix[i].size(); ii++)
+                cout << ii << "\t";
+            cout << endl;
+        }
         cout << i << "\t";
+
         for (int ii(0); ii < space_matrix[i].size(); ii++)
         {
             Space *_c = space_matrix[i][ii];
