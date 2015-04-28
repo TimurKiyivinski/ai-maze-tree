@@ -158,7 +158,7 @@ bool check_file(string file_name)
     return map_file.good();
 }
 
-priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_children(tree_node_<Space*> *tn, int c = 0)
+priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_children(tree_node_<Space*> *tn, bool c)
 {
     priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
     tree<Space*>::sibling_iterator SIB(tn);
@@ -167,11 +167,25 @@ priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> g
     for (auto IT = SIB.begin(); IT != SIB.end(); IT++)
     {
         tree_node_<Space*> *child_node = IT.node;
-        if (c != 0)
+        if (c)
         {
             Space *s = child_node->data;
             s->set_heuristic(s->get_init_heuristic() + parent_count(child_node) + c);
         }
+        children.push(child_node);
+    }
+    return children;
+}
+
+priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_breadth(tree_node_<Space*> *tn)
+{
+    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
+    tree<Space*>::fixed_depth_iterator FDI(tn);
+
+    // Find all child siblings
+    for (auto IT = FDI.begin(); IT != FDI.end(); IT++)
+    {
+        tree_node_<Space*> *child_node = IT.node;
         children.push(child_node);
     }
     return children;
@@ -685,7 +699,7 @@ int program_main(string file_name)
             }
             
             // Find successors
-            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, 1);
+            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, true);
             
             if (children.size() == 0) continue;
             
@@ -709,9 +723,112 @@ int program_main(string file_name)
 #endif
 #ifdef ALGO_BS
         cout << "BS" << endl;
+        deque<tree_node_<Space*>*> path;
+        tree_node_<Space*> *root_node_ = root_node.node;
+        path.push_front(root_node_);
+        while (! path.empty())
+        {
+            // Get current state
+            tree_node_<Space*> *current_node = path.front();
+            path.pop_front();
+            cout << "Parent" << endl;
+            Space *current_space = current_node->data;
+            cout << current_space << endl;
+            
+            space_robot = current_space;
+            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+            window.draw(robot_shape);
+            window.display();
+            
+            // If we have found the solution
+            if (current_space->is_finish())
+            {
+                _finished = true;
+                // Get finished node
+                tree_node_<Space*> solution_node = *current_node;
+                // Iterate parents
+                tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                // Count steps required
+                int steps(1);
+                while(!solution_node_parent->data->is_start())
+                {
+                    robot_parent.setPosition(sf::Vector2f(
+                                solution_node_parent->data->getY() * 10,
+                                solution_node_parent->data->getX() * 10));
+                    window.draw(robot_parent);
+                    window.display();
+                    cout << solution_node_parent->data << endl;
+                    solution_node_parent= solution_node_parent->parent;
+                    steps++;
+                }
+                cout << "Required steps: " << steps << endl;
+                break;
+            }
+            
+            // Find successors
+            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_breadth(current_node);
+            
+            if (children.size() == 0) continue;
+            
+            // Evaluate children
+            while (! children.empty())
+            {
+                cout << "Children" << endl;
+                tree_node_<Space*> *child_node = children.top();
+                children.pop();
+                Space *child_space = child_node->data;
+                cout << child_space << endl;
+                cout << child_space->get_heuristic() << endl;
+                path.push_front(child_node);
+            }
+        }
 #endif
 #ifdef ALGO_HS
         cout << "HS" << endl;
+        tree_node_<Space*> *current_node = root_node.node;
+        while (! _finished)
+        {
+            // Get current state
+            cout << "Parent" << endl;
+            Space *current_space = current_node->data;
+            cout << current_space << endl;
+            
+            space_robot = current_space;
+            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+            window.draw(robot_shape);
+            window.display();
+            
+            // If we have found the solution
+            if (current_space->is_finish())
+            {
+                _finished = true;
+                // Get finished node
+                tree_node_<Space*> solution_node = *current_node;
+                // Iterate parents
+                tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                // Count steps required
+                int steps(1);
+                while(!solution_node_parent->data->is_start())
+                {
+                    robot_parent.setPosition(sf::Vector2f(
+                                solution_node_parent->data->getY() * 10,
+                                solution_node_parent->data->getX() * 10));
+                    window.draw(robot_parent);
+                    window.display();
+                    cout << solution_node_parent->data << endl;
+                    solution_node_parent= solution_node_parent->parent;
+                    steps++;
+                }
+                cout << "Required steps: " << steps << endl;
+                b;
+            }
+            
+            // Find successors
+            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
+            
+            if (children.size() == 0) continue;
+            current_node = children.top();
+        }
         
 #endif
         if (!_finished) window.clear();
