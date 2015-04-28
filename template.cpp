@@ -120,7 +120,7 @@ bool check_file(string file_name)
     return map_file.good();
 }
 
-priority_queue<tree_node_<Space*>*> get_children(tree_node_<Space*> *tn)
+priority_queue<tree_node_<Space*>*> get_children(tree_node_<Space*> *tn, int c = 0)
 {
     priority_queue<tree_node_<Space*>*> children;
     tree<Space*>::sibling_iterator SIB(tn);
@@ -129,6 +129,8 @@ priority_queue<tree_node_<Space*>*> get_children(tree_node_<Space*> *tn)
     for (auto IT = SIB.begin(); IT != SIB.end(); IT++)
     {
         tree_node_<Space*> *child_node = IT.node;
+        Space *s = child_node->data;
+        s->set_heuristic(s->get_heuristic() + c);
         children.push(child_node);
     }
     return children;
@@ -174,90 +176,8 @@ bool construct_tree(
         tree<Space*> *tr,
         tree<Space*>::iterator *node,
         int x,
-        int y,
-        int h = -1)
+        int y)
 {
-#ifdef HEURISTICS
-    priority_queue<int*, vector<int*>, less<int*>> priority;
-    int _up(h), _left(h), _down(h), _right(h);
-    if (x > 0)                  if (map[x-1][y] != NULL) // Up
-        _up = map[x-1][y]->get_heuristic();
-    if (y > 0)                  if (map[x][y-1] != NULL) // Left
-        _left = map[x][y-1]->get_heuristic();
-    if (x < map.size() - 1)     if (map[x+1][y] != NULL) // Down
-        _down = map[x+1][y]->get_heuristic();
-    if (y < map[0].size() -1) if (map[x][y+1] != NULL) // Right
-        _right = map[x][y+1]->get_heuristic();
-    if (_up != h)
-        priority.push(&_up);
-    if (_left != h)
-        priority.push(&_left);
-    if (_down != h)
-        priority.push(&_down);
-    if (_right != h)
-        priority.push(&_right);
-    while (! priority.empty())
-    {
-        int *_current = priority.top();
-        priority.pop();
-        if (_current == &_up)
-        {
-            // Load parents
-            vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
-            tree<Space*>::iterator child;
-            Space *_c = map[x-1][y];
-            // Only add if node is not a parent
-            bool b_add = ! is_parent(_c, _parents);
-            if (b_add)
-            {
-                child = tr->append_child(*node, _c);
-                construct_tree(map, tr, &child, x-1, y, h);
-            }
-        }
-        else if (_current == &_left)
-        {
-            // Load parents
-            vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
-            tree<Space*>::iterator child;
-            Space *_c = map[x][y-1];
-            // Only add if node is not a parent
-            bool b_add = ! is_parent(_c, _parents);
-            if (b_add)
-            {
-                child = tr->append_child(*node, _c);
-                construct_tree(map, tr, &child, x, y-1, h);
-            }
-        }
-        else if (_current == &_down)
-        {
-            // Load parents
-            vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
-            tree<Space*>::iterator child;
-            Space *_c = map[x+1][y];
-            // Only add if node is not a parent
-            bool b_add = ! is_parent(_c, _parents);
-            if (b_add)
-            {
-                child = tr->append_child(*node, _c);
-                construct_tree(map, tr, &child, x+1, y, h);
-            }
-        }
-        else if (_current == &_right)
-        {
-            // Load parents
-            vector<tree<Space*>::iterator> _parents = get_parents(tr, node);
-            tree<Space*>::iterator child;
-            Space *_c = map[x][y+1];
-            // Only add if node is not a parent
-            bool b_add = ! is_parent(_c, _parents);
-            if (b_add)
-            {
-                child = tr->append_child(*node, _c);
-                construct_tree(map, tr, &child, x, y+1, h);
-            }
-        }
-    }
-#else
     // Add children
     if (x > 0)                  if (map[x-1][y] != NULL) // Up
     {
@@ -315,7 +235,6 @@ bool construct_tree(
             construct_tree(map, tr, &child, x, y+1);
         }
     }
-#endif
 }
 
 int program_main(string file_name)
@@ -383,18 +302,25 @@ int program_main(string file_name)
      * in the map are used. The heuristic function is
      * only used in algorithms that bvenefit from it.
      * */
+    cout << "Heuristic Table:" << endl;
     for (int i(0); i < space_matrix.size(); i++)
-    for (int ii(0); ii < space_matrix[i].size(); ii++)
     {
-        Space *_c = space_matrix[i][ii];
-        if (_c != NULL)
+        cout << i << "\t";
+        for (int ii(0); ii < space_matrix[i].size(); ii++)
         {
-            _c->set_heuristic(get_manhattan(
-                        space_finish->getX(),
-                        space_finish->getY(),
-                        _c->getX(),
-                        _c->getY()));
+            Space *_c = space_matrix[i][ii];
+            if (_c != NULL)
+            {
+                _c->set_heuristic(get_manhattan(
+                            space_finish->getX(),
+                            space_finish->getY(),
+                            _c->getX(),
+                            _c->getY()));
+                cout << _c->get_heuristic() << "\t";
+            }
+            else cout << "###\t";
         }
+        cout << endl;
     }
 
     /* *
@@ -407,7 +333,7 @@ int program_main(string file_name)
     tree<Space*>::iterator space_root, root_node;
     space_root = space_tree.begin();
     root_node = space_tree.insert(space_root, space_start);
-    construct_tree(space_matrix, &space_tree, &root_node, space_start->getX(), space_start->getY(), _width * _height);
+    construct_tree(space_matrix, &space_tree, &root_node, space_start->getX(), space_start->getY());
     
 #ifdef DEBUG
     cout << "Debug" << endl;
@@ -613,7 +539,8 @@ int program_main(string file_name)
                 tree_node_<Space*> *child_node = children.top();
                 children.pop();
                 Space *child_space = child_node->data;
-                if (! in_queue(child_space, path))
+                path.push(child_node);
+                if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
                 {
                     path.push(child_node);
                 }
@@ -639,10 +566,96 @@ int program_main(string file_name)
                 //}
             }
         }
-        _finished = true;
 #endif
 #ifdef ALGO_ASS
         cout << "ASS" << endl;
+        priority_queue<tree_node_<Space*>*> path;
+        priority_queue<tree_node_<Space*>*> dead_path;
+        tree_node_<Space*> *root_node_ = root_node.node;
+        path.push(root_node_);
+        int cost(0);
+        while (! path.empty())
+        {
+            // Get current state
+            tree_node_<Space*> *current_node = path.top();
+            path.pop();
+            dead_path.push(current_node);
+            Space *current_space = current_node->data;
+            cout << current_space << endl;
+            cost++;
+            
+            space_robot = current_space;
+            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+            window.draw(robot_shape);
+            window.display();
+            
+            // If we have found the solution
+            if (current_space->is_finish())
+            {
+                _finished = true;
+                // Get finished node
+                tree_node_<Space*> solution_node = *current_node;
+                // Iterate parents
+                tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                // Count steps required
+                int steps(1);
+                while(!solution_node_parent->data->is_start())
+                {
+                    robot_parent.setPosition(sf::Vector2f(
+                                solution_node_parent->data->getY() * 10,
+                                solution_node_parent->data->getX() * 10));
+                    window.draw(robot_parent);
+                    window.display();
+                    cout << solution_node_parent->data << endl;
+                    solution_node_parent= solution_node_parent->parent;
+                    steps++;
+                }
+                cout << "Required steps: " << steps << endl;
+                break;
+            }
+            
+            // Find successors
+            priority_queue<tree_node_<Space*>*> children = get_children(current_node, cost);
+            
+            if (children.size() == 0)
+            {
+                cost--;
+                continue;
+            }
+            
+            // Evaluate children
+            while (! children.empty())
+            {
+                tree_node_<Space*> *child_node = children.top();
+                children.pop();
+                Space *child_space = child_node->data;
+                if (in_queue(child_space, dead_path)) continue;
+                if (! in_queue(child_space, path) || child_space->get_heuristic() < cost)
+                {
+                    path.push(child_node);
+                }
+                //else if (*child_space < *current_space)
+                //{
+                //    if (! in_queue(child_space, path))
+                //        path.push(child_node);
+                //    else
+                //    {
+                //        priority_queue<tree_node_<Space*>*> old_path;
+                //        while (path.top() != child_node)
+                //        {
+                //            old_path.push(path.top());
+                //            path.pop();
+                //        }
+                //        path.pop();
+                //        while (! old_path.empty())
+                //        {
+                //            path.push(old_path.top());
+                //            old_path.pop();
+                //        }
+                //    }
+                //}
+            }
+        }
 #endif
 #ifdef ALGO_BS
         cout << "BS" << endl;
