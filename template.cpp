@@ -93,6 +93,22 @@ bool in_history(Space *s, vector<Space*> history)
     return false;
 }
 
+int parent_count(tree_node_<Space*> *n)
+{
+    // Get finished node
+    tree_node_<Space*> solution_node = *n;
+    // Iterate parents
+    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+    // Count steps required
+    int steps(1);
+    while(!solution_node_parent->data->is_start())
+    {
+        solution_node_parent= solution_node_parent->parent;
+        steps++;
+    }
+    return steps;
+}
+
 bool in_queue(Space *s, priority_queue<tree_node_<Space*>*> que)
 {
     while (! que.empty())
@@ -129,8 +145,11 @@ priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> g
     for (auto IT = SIB.begin(); IT != SIB.end(); IT++)
     {
         tree_node_<Space*> *child_node = IT.node;
-        Space *s = child_node->data;
-        s->set_heuristic(s->get_heuristic() + c);
+        if (c != 0)
+        {
+            Space *s = child_node->data;
+            s->set_heuristic(s->get_init_heuristic() + parent_count(child_node) + c);
+        }
         children.push(child_node);
     }
     return children;
@@ -504,7 +523,6 @@ int program_main(string file_name)
             path.pop();
             dead_path.push(current_node);
             Space *current_space = current_node->data;
-            cout << "Current" << endl;
             cout << current_space << endl;
             
             space_robot = current_space;
@@ -543,7 +561,6 @@ int program_main(string file_name)
             if (children.size() == 0) continue;
             
             // Evaluate children
-            cout << "Children" << endl;
             while (! children.empty())
             {
                 tree_node_<Space*> *child_node = children.top();
@@ -555,32 +572,13 @@ int program_main(string file_name)
                 {
                     path.push(child_node);
                 }
-                //else if (*child_space < *current_space)
-                //{
-                //    if (! in_queue(child_space, path))
-                //        path.push(child_node);
-                //    else
-                //    {
-                //        priority_queue<tree_node_<Space*>*> old_path;
-                //        while (path.top() != child_node)
-                //        {
-                //            old_path.push(path.top());
-                //            path.pop();
-                //        }
-                //        path.pop();
-                //        while (! old_path.empty())
-                //        {
-                //            path.push(old_path.top());
-                //            old_path.pop();
-                //        }
-                //    }
-                //}
             }
         }
 #endif
 #ifdef ALGO_ASS
         cout << "ASS" << endl;
-        priority_queue<tree_node_<Space*>*> path;
+        // priority_queue<tree_node_<Space*>*> path;
+        priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> path;
         priority_queue<tree_node_<Space*>*> dead_path;
         tree_node_<Space*> *root_node_ = root_node.node;
         path.push(root_node_);
@@ -626,7 +624,7 @@ int program_main(string file_name)
             }
             
             // Find successors
-            priority_queue<tree_node_<Space*>*> children = get_children(current_node, cost);
+            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, cost);
             
             if (children.size() == 0)
             {
@@ -640,31 +638,10 @@ int program_main(string file_name)
                 tree_node_<Space*> *child_node = children.top();
                 children.pop();
                 Space *child_space = child_node->data;
-                if (in_queue(child_space, dead_path)) continue;
-                if (! in_queue(child_space, path) || child_space->get_heuristic() < cost)
+                if (! in_queue(child_space, dead_path))
                 {
                     path.push(child_node);
                 }
-                //else if (*child_space < *current_space)
-                //{
-                //    if (! in_queue(child_space, path))
-                //        path.push(child_node);
-                //    else
-                //    {
-                //        priority_queue<tree_node_<Space*>*> old_path;
-                //        while (path.top() != child_node)
-                //        {
-                //            old_path.push(path.top());
-                //            path.pop();
-                //        }
-                //        path.pop();
-                //        while (! old_path.empty())
-                //        {
-                //            path.push(old_path.top());
-                //            old_path.pop();
-                //        }
-                //    }
-                //}
             }
         }
 #endif

@@ -13,6 +13,8 @@ class Space
         int y;
         // Space heuristic
         int h;
+        // Initial space heuristic
+        int hh;
         // Start/Fin char
         char type;
     public:
@@ -35,6 +37,7 @@ class Space
         int getY() const;
         // Gets the space heuristic
         int get_heuristic() const;
+        int get_init_heuristic() const;
         // Easier to compare
         bool operator==(Space* _compare_space);
         friend std::ostream& operator<<(std::ostream &os, const Space &s);
