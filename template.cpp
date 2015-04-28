@@ -120,9 +120,9 @@ bool check_file(string file_name)
     return map_file.good();
 }
 
-priority_queue<tree_node_<Space*>*> get_children(tree_node_<Space*> *tn, int c = 0)
+priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_children(tree_node_<Space*> *tn, int c = 0)
 {
-    priority_queue<tree_node_<Space*>*> children;
+    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
     tree<Space*>::sibling_iterator SIB(tn);
 
     // Find all child siblings
@@ -504,6 +504,7 @@ int program_main(string file_name)
             path.pop();
             dead_path.push(current_node);
             Space *current_space = current_node->data;
+            cout << "Current" << endl;
             cout << current_space << endl;
             
             space_robot = current_space;
@@ -537,17 +538,19 @@ int program_main(string file_name)
             }
             
             // Find successors
-            priority_queue<tree_node_<Space*>*> children = get_children(current_node);
+            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
             
             if (children.size() == 0) continue;
             
             // Evaluate children
+            cout << "Children" << endl;
             while (! children.empty())
             {
                 tree_node_<Space*> *child_node = children.top();
                 children.pop();
                 Space *child_space = child_node->data;
-                path.push(child_node);
+                cout << child_space << endl;
+                cout << child_space->get_heuristic() << endl;
                 if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
                 {
                     path.push(child_node);
