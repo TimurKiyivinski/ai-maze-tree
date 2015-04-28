@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <algorithm>
+#include <regex>
 #include <deque>
 #include <vector>
 #include <SFML/Graphics.hpp>
@@ -29,6 +30,14 @@
 #include "space.h"
 
 using namespace std;
+
+// Standard function
+string itos(int i)
+{
+    stringstream ss;
+    ss << i;
+    return ss.str();
+}
 
 // Space < operator overload
 inline bool operator<(const Space &lhs, const Space &rhs)
@@ -64,86 +73,6 @@ class NodeSpaceMin
         }
 };
 
-string itos(int i)
-{
-    stringstream ss;
-    ss << i;
-    return ss.str();
-}
-
-/* *
- * Returns the manhattan distance between two sets
- * of coordinates
- *
- * x1           Start X coordinate
- * y1           Start Y coordinate
- * x2           Destination X coordinate
- * y2           Destination Y coordinate
- *
- * return       Manhattan distance
- * */
-int get_manhattan(int x1, int y1, int x2, int y2)
-{
-    int X(0), Y(0);
-    x1 >= x2 ?
-        X = x1 - x2:
-        X = x2 - x1;
-    y1 >= y2 ?
-        Y = y1 - y2:
-        Y = y2 - y1;
-    return X + Y;
-}
-
-bool in_history(Space *s, vector<Space*> history)
-{
-    for (Space *h: history)
-        if (s == h)
-            return true;
-    return false;
-}
-
-int parent_count(tree_node_<Space*> *n)
-{
-    // Get finished node
-    tree_node_<Space*> solution_node = *n;
-    // Iterate parents
-    tree_node_<Space*> *solution_node_parent= solution_node.parent;
-    // Count steps required
-    int steps(1);
-    while(!solution_node_parent->data->is_start())
-    {
-        solution_node_parent= solution_node_parent->parent;
-        steps++;
-    }
-    return steps;
-}
-
-bool in_queue(Space *s, deque<tree_node_<Space*>*> que)
-{
-    while (! que.empty())
-    {
-        tree_node_<Space*> *que_node = que.front();
-        Space *qs = que_node->data;
-        if (s == qs)
-            return true;
-        que.pop_front();
-    }
-    return false;
-}
-
-void print_queue(deque<tree_node_<Space*>*> que)
-{
-    cout << "Que of size " << que.size() << endl;
-    while (! que.empty())
-    {
-        tree_node_<Space*> *que_node = que.front();
-        Space *qs = que_node->data;
-        cout << qs << endl;
-        que.pop_front();
-    }
-    cout << "Done" << endl;
-}
-
 /* *
  * Cross platform way to check if
  * a file exists.
@@ -158,44 +87,27 @@ bool check_file(string file_name)
     return map_file.good();
 }
 
-priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_children(tree_node_<Space*> *tn, bool c)
-{
-    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
-    tree<Space*>::sibling_iterator SIB(tn);
-
-    // Find all child siblings
-    for (auto IT = SIB.begin(); IT != SIB.end(); IT++)
-    {
-        tree_node_<Space*> *child_node = IT.node;
-        if (c)
-        {
-            Space *s = child_node->data;
-            s->set_heuristic(s->get_init_heuristic() + parent_count(child_node) + c);
-        }
-        children.push(child_node);
-    }
-    return children;
-}
-
-priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_breadth(tree_node_<Space*> *tn)
-{
-    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
-    tree<Space*>::fixed_depth_iterator FDI(tn);
-
-    // Find all child siblings
-    for (auto IT = FDI.begin(); IT != FDI.end(); IT++)
-    {
-        tree_node_<Space*> *child_node = IT.node;
-        children.push(child_node);
-    }
-    return children;
-}
-
+/* *
+ * Returns a node parent
+ *
+ * tr           Tree pointer
+ * node         Node
+ * 
+ * return       Iterator of node parent
+ * */
 tree<Space*>::iterator get_parent(tree<Space*> *tr, tree<Space*>::iterator *node)
 {
     return tr->parent(*node);
 }
 
+/* *
+ * Finds all parent nodes of a node
+ *
+ * s            Space to check
+ * p            Parent vector
+ *
+ * return       Vector of all parent nodes
+ * */
 vector<tree<Space*>::iterator> get_parents(tree<Space*> *tr, tree<Space*>::iterator *node)
 {
     // Load parents
@@ -214,6 +126,15 @@ vector<tree<Space*>::iterator> get_parents(tree<Space*> *tr, tree<Space*>::itera
     return _parents;
 }
 
+/* *
+ * Checks if a Space parent exists
+ * in a given iterator vector
+ *
+ * s            Space to check
+ * p            Parent vector
+ * 
+ * return       Boolean p contains parent of s
+ * */
 bool is_parent(Space *s, vector<tree<Space*>::iterator> p)
 {
     for (tree<Space*>::iterator parent: p)
@@ -226,7 +147,16 @@ bool is_parent(Space *s, vector<tree<Space*>::iterator> p)
     return false;
 }
 
-bool construct_tree(
+/* *
+ * Recursive Tree Construction
+ *
+ * map          Maze map
+ * tr           Tree pointer
+ * node         Node of last expansion
+ * x            X coordinate of last expansion
+ * y            Y coordinate of last expansion
+ * */
+void construct_tree(
         vector<vector<Space*>> map,
         tree<Space*> *tr,
         tree<Space*>::iterator *node,
@@ -292,7 +222,117 @@ bool construct_tree(
     }
 }
 
-int program_main(string file_name)
+/* *
+ * Returns the manhattan distance between two sets
+ * of coordinates
+ *
+ * x1           Start X coordinate
+ * y1           Start Y coordinate
+ * x2           Destination X coordinate
+ * y2           Destination Y coordinate
+ *
+ * return       Manhattan distance
+ * */
+int get_manhattan(int x1, int y1, int x2, int y2)
+{
+    int X(0), Y(0);
+    x1 >= x2 ?
+        X = x1 - x2:
+        X = x2 - x1;
+    y1 >= y2 ?
+        Y = y1 - y2:
+        Y = y2 - y1;
+    return X + Y;
+}
+
+/* *
+ * Counts the number of parents a node has
+ *
+ * n            Node
+ *
+ * return       Parent count
+ * */
+int parent_count(tree_node_<Space*> *n)
+{
+    // Get finished node
+    tree_node_<Space*> solution_node = *n;
+    // Iterate parents
+    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+    // Count steps required
+    int steps(1);
+    while(!solution_node_parent->data->is_start())
+    {
+        solution_node_parent= solution_node_parent->parent;
+        steps++;
+    }
+    return steps;
+}
+
+priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_children(tree_node_<Space*> *tn, bool c = false)
+{
+    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
+    tree<Space*>::sibling_iterator SIB(tn);
+
+    // Find all child siblings
+    for (auto IT = SIB.begin(); IT != SIB.end(); IT++)
+    {
+        tree_node_<Space*> *child_node = IT.node;
+        if (c)
+        {
+            Space *s = child_node->data;
+            s->set_heuristic(s->get_init_heuristic() + parent_count(child_node) + c);
+        }
+        children.push(child_node);
+    }
+    return children;
+}
+
+priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> get_breadth(tree_node_<Space*> *tn)
+{
+    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children;
+    tree<Space*>::fixed_depth_iterator FDI(tn);
+
+    // Find all child siblings
+    for (auto IT = FDI.begin(); IT != FDI.end(); IT++)
+    {
+        tree_node_<Space*> *child_node = IT.node;
+        children.push(child_node);
+    }
+    return children;
+}
+
+/* *
+ * Checks if a space exists in a deque
+ *
+ * s            Space
+ * que          Deque to test
+ *
+ * return       Boolean if s is in que
+ * */
+bool in_queue(Space *s, deque<tree_node_<Space*>*> que)
+{
+    while (! que.empty())
+    {
+        tree_node_<Space*> *que_node = que.front();
+        Space *qs = que_node->data;
+        if (s == qs)
+            return true;
+        que.pop_front();
+    }
+    return false;
+}
+
+/* *
+ * Main program function
+ *
+ * file_name    Name of map file to load
+ * algorithm    Algorithm to use
+ * window_fps   Frames per second
+ * verbose      Verbose option
+ *
+ * return       Program EXIT code
+ * */
+int program_main(string file_name, int algorithm, int window_fps = 30, bool verbose = false)
 {
     // Function scope variables:
     // Loads map file
@@ -309,6 +349,9 @@ int program_main(string file_name)
     Space* space_finish = NULL;
     // Map size
     int _width, _height;
+    
+    if (verbose)
+        cout << "Verbose mode enabled" << endl;
 
     /* *
      * Section: Load map
@@ -317,7 +360,7 @@ int program_main(string file_name)
      * Spaces as well as find the start & finish
      * point of the maze.
      * */
-    cout << "Loading map" << endl;
+    cout << "Loading map..." << endl;
     // Temporarily stores map lines
     string map_line;
     // Get map data, line by line
@@ -357,17 +400,22 @@ int program_main(string file_name)
      * in the map are used. The heuristic function is
      * only used in algorithms that bvenefit from it.
      * */
-    cout << "Heuristic Table:" << endl;
+    if (verbose)
+        cout << "Heuristic Table:" << endl;
     for (int i(0); i < space_matrix.size(); i++)
     {
         if (i == 0)
         {
-            cout << "###\t";
+            if (verbose)
+                cout << "###\t";
             for (int ii(0); ii < space_matrix[i].size(); ii++)
-                cout << ii << "\t";
-            cout << endl;
+                if (verbose)
+                    cout << ii << "\t";
+            if (verbose)
+                cout << endl;
         }
-        cout << i << "\t";
+        if (verbose)
+            cout << i << "\t";
 
         for (int ii(0); ii < space_matrix[i].size(); ii++)
         {
@@ -379,11 +427,14 @@ int program_main(string file_name)
                             space_finish->getY(),
                             _c->getX(),
                             _c->getY()));
-                cout << _c->get_heuristic() << "\t";
+                if (verbose)
+                    cout << _c->get_heuristic() << "\t";
             }
-            else cout << "###\t";
+            else if (verbose)
+                cout << "###\t";
         }
-        cout << endl;
+        if (verbose)
+            cout << endl;
     }
 
     /* *
@@ -392,28 +443,27 @@ int program_main(string file_name)
      * Use the Space matrix to populate the tree
      * by checking surrounding points in the matrix
      * */
-    cout << "Loading tree" << endl;
+    cout << "Loading tree..." << endl;
     tree<Space*>::iterator space_root, root_node;
     space_root = space_tree.begin();
     root_node = space_tree.insert(space_root, space_start);
     construct_tree(space_matrix, &space_tree, &root_node, space_start->getX(), space_start->getY());
-    
-#ifdef DEBUG
-    cout << "Debug" << endl;
-    kptree::print_tree_bracketed(space_tree, cout);
-    cout << endl;
-#endif
+    if (verbose)
+    {
+        cout << "Generated tree:" << endl;
+        kptree::print_tree_bracketed(space_tree, cout);
+        cout << endl;
+    }
     
     /* *
      * Section: Graphics
      *
      * Use SFML to draw graphics in a separate thread
      * */
-    cout << "Loading graphics" << endl;
+    cout << "Loading graphics..." << endl;
     // Create inital Window
     sf::RenderWindow window(sf::VideoMode(_width, _height), "AI");
     // Optimal speed to view results
-    int window_fps(60);
     window.setFramerateLimit(window_fps);
     // Robot begins at starting space
     Space *space_robot = space_start;
@@ -476,7 +526,7 @@ int program_main(string file_name)
         
         // Skip first 60 frames to avoid initial
         // artifacts that form on startup
-        if (init_frame_count < window_fps)
+        if (init_frame_count < 6)
         {
             window.clear();
             init_frame_count++;
@@ -488,349 +538,356 @@ int program_main(string file_name)
          *
          * Different algorithm sections
          * */
-#ifdef ALGO_BFS
-        cout << "BFS" << endl;
-        tree<Space*>::breadth_first_queued_iterator BFS(root_node);
-        while (BFS != root_node.end())
+        if (algorithm == 0)
         {
-            space_robot = *BFS;
-            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
-            window.draw(robot_shape);
-            window.display();
-            cout << space_robot << endl;
-            if ((*BFS)->is_finish())
+            cout << "BFS" << endl;
+            tree<Space*>::breadth_first_queued_iterator BFS(root_node);
+            while (BFS != root_node.end())
             {
-                _finished = true;
-                // Get finished node
-                tree_node_<Space*> solution_node = BFS.get_node();
-                // Iterate parents
-                tree_node_<Space*> *solution_node_parent= solution_node.parent;
-                // Count steps required
-                int steps(1);
-                while(!solution_node_parent->data->is_start())
+                space_robot = *BFS;
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                window.draw(robot_shape);
+                window.display();
+                if (verbose)
+                    cout << space_robot << endl;
+                if ((*BFS)->is_finish())
                 {
-                    robot_parent.setPosition(sf::Vector2f(
-                                solution_node_parent->data->getY() * 10,
-                                solution_node_parent->data->getX() * 10));
-                    window.draw(robot_parent);
-                    window.display();
-                    cout << solution_node_parent->data << endl;
-                    solution_node_parent= solution_node_parent->parent;
-                    steps++;
+                    cout << "Solved" << endl;
+                    _finished = true;
+                    // Get finished node
+                    tree_node_<Space*> solution_node = BFS.get_node();
+                    // Iterate parents
+                    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                    // Count steps required
+                    int steps(1);
+                    while(!solution_node_parent->data->is_start())
+                    {
+                        robot_parent.setPosition(sf::Vector2f(
+                                    solution_node_parent->data->getY() * 10,
+                                    solution_node_parent->data->getX() * 10));
+                        window.draw(robot_parent);
+                        window.display();
+                        if (verbose)
+                            cout << solution_node_parent->data << endl;
+                        solution_node_parent= solution_node_parent->parent;
+                        steps++;
+                    }
+                    cout << "Required steps: " << steps << endl;
+                    break;
                 }
-                cout << "Required steps: " << steps << endl;
-                break;
+                BFS++;
             }
-            BFS++;
         }
-#endif
-#ifdef ALGO_DFS
-        cout << "DFS" << endl;
-        tree<Space*>::pre_order_iterator DFS(root_node);
-        while (DFS != root_node.end())
+        else if (algorithm == 1)
         {
-            space_robot = *DFS;
-            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
-            window.draw(robot_shape);
-            window.display();
-            cout << space_robot << endl;
-            if ((*DFS)->is_finish())
+            cout << "DFS" << endl;
+            tree<Space*>::pre_order_iterator DFS(root_node);
+            while (DFS != root_node.end())
             {
-                _finished = true;
-                // Get finished node
-                tree_node_<Space*> solution_node = DFS.get_node();
-                // Iterate parents
-                tree_node_<Space*> *solution_node_parent= solution_node.parent;
-                // Count steps required
-                int steps(1);
-                while(!solution_node_parent->data->is_start())
+                space_robot = *DFS;
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                window.draw(robot_shape);
+                window.display();
+                if (verbose)
+                    cout << space_robot << endl;
+                if ((*DFS)->is_finish())
                 {
-                    robot_parent.setPosition(sf::Vector2f(
-                                solution_node_parent->data->getY() * 10,
-                                solution_node_parent->data->getX() * 10));
-                    window.draw(robot_parent);
-                    window.display();
-                    cout << solution_node_parent->data << endl;
-                    solution_node_parent= solution_node_parent->parent;
-                    steps++;
+                    cout << "Solved" << endl;
+                    _finished = true;
+                    // Get finished node
+                    tree_node_<Space*> solution_node = DFS.get_node();
+                    // Iterate parents
+                    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                    // Count steps required
+                    int steps(1);
+                    while(!solution_node_parent->data->is_start())
+                    {
+                        robot_parent.setPosition(sf::Vector2f(
+                                    solution_node_parent->data->getY() * 10,
+                                    solution_node_parent->data->getX() * 10));
+                        window.draw(robot_parent);
+                        window.display();
+                        if (verbose)
+                            cout << solution_node_parent->data << endl;
+                        solution_node_parent= solution_node_parent->parent;
+                        steps++;
+                    }
+                    cout << "Required steps: " << steps << endl;
+                    break;
                 }
-                cout << "Required steps: " << steps << endl;
-                break;
+                DFS++;
             }
-            DFS++;
         }
-#endif
-#ifdef ALGO_GBFS
-        cout << "GBFS" << endl;
-        deque<tree_node_<Space*>*> path;
-        deque<tree_node_<Space*>*> dead_path;
-        tree_node_<Space*> *root_node_ = root_node.node;
-        path.push_front(root_node_);
-        while (! path.empty())
+        else if (algorithm == 2)
         {
-            // Get current state
-            tree_node_<Space*> *current_node = path.front();
-            path.pop_front();
-            dead_path.push_front(current_node);
-            cout << "Parent" << endl;
-            Space *current_space = current_node->data;
-            cout << current_space << endl;
-            
-            space_robot = current_space;
-            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
-            window.draw(robot_shape);
-            window.display();
-            
-            // If we have found the solution
-            if (current_space->is_finish())
+            cout << "GBFS" << endl;
+            deque<tree_node_<Space*>*> path;
+            deque<tree_node_<Space*>*> dead_path;
+            tree_node_<Space*> *root_node_ = root_node.node;
+            path.push_front(root_node_);
+            while (! path.empty())
             {
-                _finished = true;
-                // Get finished node
-                tree_node_<Space*> solution_node = *current_node;
-                // Iterate parents
-                tree_node_<Space*> *solution_node_parent= solution_node.parent;
-                // Count steps required
-                int steps(1);
-                while(!solution_node_parent->data->is_start())
+                cout << "Solved" << endl;
+                // Get current state
+                tree_node_<Space*> *current_node = path.front();
+                path.pop_front();
+                dead_path.push_front(current_node);
+                Space *current_space = current_node->data;
+                if (verbose)
+                    cout << current_space << endl;
+
+                space_robot = current_space;
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                window.draw(robot_shape);
+                window.display();
+
+                // If we have found the solution
+                if (current_space->is_finish())
                 {
-                    robot_parent.setPosition(sf::Vector2f(
-                                solution_node_parent->data->getY() * 10,
-                                solution_node_parent->data->getX() * 10));
-                    window.draw(robot_parent);
-                    window.display();
-                    cout << solution_node_parent->data << endl;
-                    solution_node_parent= solution_node_parent->parent;
-                    steps++;
+                    _finished = true;
+                    // Get finished node
+                    tree_node_<Space*> solution_node = *current_node;
+                    // Iterate parents
+                    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                    // Count steps required
+                    int steps(1);
+                    while(!solution_node_parent->data->is_start())
+                    {
+                        robot_parent.setPosition(sf::Vector2f(
+                                    solution_node_parent->data->getY() * 10,
+                                    solution_node_parent->data->getX() * 10));
+                        window.draw(robot_parent);
+                        window.display();
+                        if (verbose)
+                            cout << solution_node_parent->data << endl;
+                        solution_node_parent= solution_node_parent->parent;
+                        steps++;
+                    }
+                    cout << "Required steps: " << steps << endl;
+                    break;
                 }
-                cout << "Required steps: " << steps << endl;
-                break;
+
+                // Find successors
+                priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
+
+                if (children.size() == 0) continue;
+
+                // Evaluate children
+                while (! children.empty())
+                {
+                    tree_node_<Space*> *child_node = children.top();
+                    children.pop();
+                    Space *child_space = child_node->data;
+                    if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
+                    {
+                        path.push_front(child_node);
+                    }
+                    else if (child_space < current_space)
+                    {
+                        if (! in_queue(child_space, path))
+                        {
+                            path.push_front(child_node);
+                        }
+                        else
+                        {
+                            for (auto IT = path.begin(); IT != path.end(); IT++)
+                            {
+                                tree_node_<Space*> *IT_node = *IT;
+                                Space *IT_space = IT_node->data;
+                                if (IT_space == child_space)
+                                {
+                                    path.erase(IT);
+                                }
+                                path.push_front(child_node);
+                                break;
+                            }
+                        }
+                    }
+                }
+                NodeSpaceMin sorter;
+                sort(path.begin(), path.end(), sorter);
             }
-            
-            // Find successors
-            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
-            
-            if (children.size() == 0) continue;
-            
-            // Evaluate children
-            while (! children.empty())
+        }
+        else if (algorithm == 3)
+        {
+            cout << "ASS" << endl;
+            deque<tree_node_<Space*>*> path;
+            deque<tree_node_<Space*>*> dead_path;
+            tree_node_<Space*> *root_node_ = root_node.node;
+            path.push_front(root_node_);
+            int g_score(0);
+            int f_score(g_score + space_start->get_heuristic());
+            while (! path.empty())
             {
-                cout << "Children" << endl;
-                tree_node_<Space*> *child_node = children.top();
-                children.pop();
-                Space *child_space = child_node->data;
-                cout << child_space << endl;
-                cout << child_space->get_heuristic() << endl;
-                if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
+                // Get current state
+                tree_node_<Space*> *current_node = path.front();
+                path.pop_front();
+                dead_path.push_front(current_node);
+                Space *current_space = current_node->data;
+                if (verbose)
+                    cout << current_space << endl;
+
+                space_robot = current_space;
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                window.draw(robot_shape);
+                window.display();
+
+                // If we have found the solution
+                if (current_space->is_finish())
                 {
-                    path.push_front(child_node);
+                    cout << "Solved" << endl;
+                    _finished = true;
+                    // Get finished node
+                    tree_node_<Space*> solution_node = *current_node;
+                    // Iterate parents
+                    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                    // Count steps required
+                    int steps(1);
+                    while(!solution_node_parent->data->is_start())
+                    {
+                        robot_parent.setPosition(sf::Vector2f(
+                                    solution_node_parent->data->getY() * 10,
+                                    solution_node_parent->data->getX() * 10));
+                        window.draw(robot_parent);
+                        window.display();
+                        if (verbose)
+                            cout << solution_node_parent->data << endl;
+                        solution_node_parent= solution_node_parent->parent;
+                        steps++;
+                    }
+                    cout << "Required steps: " << steps << endl;
+                    break;
                 }
-                else if (child_space < current_space)
+
+                // Find successors
+                priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, true);
+
+                if (children.size() == 0) continue;
+
+                // Evaluate children
+                while (! children.empty())
                 {
+                    tree_node_<Space*> *child_node = children.top();
+                    children.pop();
+                    Space *child_space = child_node->data;
+                    if (in_queue(child_space, dead_path)) continue;
+                    int g_child_score(parent_count(child_node) + 1);
                     if (! in_queue(child_space, path))
                     {
                         path.push_front(child_node);
                     }
-                    else
-                    {
-                        for (auto IT = path.begin(); IT != path.end(); IT++)
-                        {
-                            tree_node_<Space*> *IT_node = *IT;
-                            Space *IT_space = IT_node->data;
-                            if (IT_space == child_space)
-                            {
-                                path.erase(IT);
-                            }
-                            path.push_front(child_node);
-                            break;
-                        }
-                    }
                 }
             }
-            NodeSpaceMin sorter;
-            sort(path.begin(), path.end(), sorter);
         }
-#endif
-#ifdef ALGO_ASS
-        cout << "ASS" << endl;
-        deque<tree_node_<Space*>*> path;
-        deque<tree_node_<Space*>*> dead_path;
-        tree_node_<Space*> *root_node_ = root_node.node;
-        path.push_front(root_node_);
-        int g_score(0);
-        int f_score(g_score + space_start->get_heuristic());
-        while (! path.empty())
+        else if (algorithm == 4)
         {
-            // Get current state
-            tree_node_<Space*> *current_node = path.front();
-            path.pop_front();
-            dead_path.push_front(current_node);
-            cout << "Parent" << endl;
-            Space *current_space = current_node->data;
-            cout << current_space << endl;
-            
-            space_robot = current_space;
-            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
-            window.draw(robot_shape);
-            window.display();
-            
-            // If we have found the solution
-            if (current_space->is_finish())
+            cout << "BS" << endl;
+            deque<tree_node_<Space*>*> path;
+            tree_node_<Space*> *root_node_ = root_node.node;
+            path.push_front(root_node_);
+            while (! path.empty())
             {
-                _finished = true;
-                // Get finished node
-                tree_node_<Space*> solution_node = *current_node;
-                // Iterate parents
-                tree_node_<Space*> *solution_node_parent= solution_node.parent;
-                // Count steps required
-                int steps(1);
-                while(!solution_node_parent->data->is_start())
+                // Get current state
+                tree_node_<Space*> *current_node = path.front();
+                path.pop_front();
+                Space *current_space = current_node->data;
+                if (verbose)
+                    cout << current_space << endl;
+
+                space_robot = current_space;
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                window.draw(robot_shape);
+                window.display();
+
+                // If we have found the solution
+                if (current_space->is_finish())
                 {
-                    robot_parent.setPosition(sf::Vector2f(
-                                solution_node_parent->data->getY() * 10,
-                                solution_node_parent->data->getX() * 10));
-                    window.draw(robot_parent);
-                    window.display();
-                    cout << solution_node_parent->data << endl;
-                    solution_node_parent= solution_node_parent->parent;
-                    steps++;
+                    _finished = true;
+                    // Get finished node
+                    tree_node_<Space*> solution_node = *current_node;
+                    // Iterate parents
+                    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                    // Count steps required
+                    int steps(1);
+                    while(!solution_node_parent->data->is_start())
+                    {
+                        robot_parent.setPosition(sf::Vector2f(
+                                    solution_node_parent->data->getY() * 10,
+                                    solution_node_parent->data->getX() * 10));
+                        window.draw(robot_parent);
+                        window.display();
+                        if (verbose)
+                            cout << solution_node_parent->data << endl;
+                        solution_node_parent= solution_node_parent->parent;
+                        steps++;
+                    }
+                    cout << "Required steps: " << steps << endl;
+                    break;
                 }
-                cout << "Required steps: " << steps << endl;
-                break;
-            }
-            
-            // Find successors
-            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, true);
-            
-            if (children.size() == 0) continue;
-            
-            // Evaluate children
-            while (! children.empty())
-            {
-                cout << "Children" << endl;
-                tree_node_<Space*> *child_node = children.top();
-                children.pop();
-                Space *child_space = child_node->data;
-                cout << child_space << endl;
-                cout << child_space->get_heuristic() << endl;
-                if (in_queue(child_space, dead_path)) continue;
-                int g_child_score(parent_count(child_node) + 1);
-                if (! in_queue(child_space, path))
+
+                // Find successors
+                priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_breadth(current_node);
+
+                if (children.size() == 0) continue;
+
+                // Evaluate children
+                while (! children.empty())
                 {
+                    tree_node_<Space*> *child_node = children.top();
+                    children.pop();
+                    Space *child_space = child_node->data;
                     path.push_front(child_node);
                 }
             }
         }
-#endif
-#ifdef ALGO_BS
-        cout << "BS" << endl;
-        deque<tree_node_<Space*>*> path;
-        tree_node_<Space*> *root_node_ = root_node.node;
-        path.push_front(root_node_);
-        while (! path.empty())
+        else if (algorithm == 5)
         {
-            // Get current state
-            tree_node_<Space*> *current_node = path.front();
-            path.pop_front();
-            cout << "Parent" << endl;
-            Space *current_space = current_node->data;
-            cout << current_space << endl;
-            
-            space_robot = current_space;
-            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
-            window.draw(robot_shape);
-            window.display();
-            
-            // If we have found the solution
-            if (current_space->is_finish())
+            cout << "HS" << endl;
+            tree_node_<Space*> *current_node = root_node.node;
+            while (! _finished)
             {
-                _finished = true;
-                // Get finished node
-                tree_node_<Space*> solution_node = *current_node;
-                // Iterate parents
-                tree_node_<Space*> *solution_node_parent= solution_node.parent;
-                // Count steps required
-                int steps(1);
-                while(!solution_node_parent->data->is_start())
+                // Get current state
+                Space *current_space = current_node->data;
+                if (verbose)
+                    cout << current_space << endl;
+
+                space_robot = current_space;
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                window.draw(robot_shape);
+                window.display();
+
+                // If we have found the solution
+                if (current_space->is_finish())
                 {
-                    robot_parent.setPosition(sf::Vector2f(
-                                solution_node_parent->data->getY() * 10,
-                                solution_node_parent->data->getX() * 10));
-                    window.draw(robot_parent);
-                    window.display();
-                    cout << solution_node_parent->data << endl;
-                    solution_node_parent= solution_node_parent->parent;
-                    steps++;
+                    _finished = true;
+                    // Get finished node
+                    tree_node_<Space*> solution_node = *current_node;
+                    // Iterate parents
+                    tree_node_<Space*> *solution_node_parent= solution_node.parent;
+                    // Count steps required
+                    int steps(1);
+                    while(!solution_node_parent->data->is_start())
+                    {
+                        robot_parent.setPosition(sf::Vector2f(
+                                    solution_node_parent->data->getY() * 10,
+                                    solution_node_parent->data->getX() * 10));
+                        window.draw(robot_parent);
+                        window.display();
+                        if (verbose)
+                            cout << solution_node_parent->data << endl;
+                        solution_node_parent= solution_node_parent->parent;
+                        steps++;
+                    }
+                    cout << "Required steps: " << steps << endl;
                 }
-                cout << "Required steps: " << steps << endl;
-                break;
-            }
-            
-            // Find successors
-            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_breadth(current_node);
-            
-            if (children.size() == 0) continue;
-            
-            // Evaluate children
-            while (! children.empty())
-            {
-                cout << "Children" << endl;
-                tree_node_<Space*> *child_node = children.top();
-                children.pop();
-                Space *child_space = child_node->data;
-                cout << child_space << endl;
-                cout << child_space->get_heuristic() << endl;
-                path.push_front(child_node);
+
+                // Find successors
+                priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
+
+                if (children.size() == 0) continue;
+                current_node = children.top();
             }
         }
-#endif
-#ifdef ALGO_HS
-        cout << "HS" << endl;
-        tree_node_<Space*> *current_node = root_node.node;
-        while (! _finished)
-        {
-            // Get current state
-            cout << "Parent" << endl;
-            Space *current_space = current_node->data;
-            cout << current_space << endl;
-            
-            space_robot = current_space;
-            robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
-            window.draw(robot_shape);
-            window.display();
-            
-            // If we have found the solution
-            if (current_space->is_finish())
-            {
-                _finished = true;
-                // Get finished node
-                tree_node_<Space*> solution_node = *current_node;
-                // Iterate parents
-                tree_node_<Space*> *solution_node_parent= solution_node.parent;
-                // Count steps required
-                int steps(1);
-                while(!solution_node_parent->data->is_start())
-                {
-                    robot_parent.setPosition(sf::Vector2f(
-                                solution_node_parent->data->getY() * 10,
-                                solution_node_parent->data->getX() * 10));
-                    window.draw(robot_parent);
-                    window.display();
-                    cout << solution_node_parent->data << endl;
-                    solution_node_parent= solution_node_parent->parent;
-                    steps++;
-                }
-                cout << "Required steps: " << steps << endl;
-                b;
-            }
-            
-            // Find successors
-            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
-            
-            if (children.size() == 0) continue;
-            current_node = children.top();
-        }
-        
-#endif
         if (!_finished) window.clear();
     }
 
@@ -847,29 +904,97 @@ int program_main(string file_name)
 }
 
 /* *
+ * Main help menu
+ *
+ *
+ * return       Failure EXIT
+ * */
+int program_help()
+{
+    cout << "Usage" << endl;
+    cout << "MAP ALGORITHM [FPS: 1 | 2 | etc] [-v]" << endl;
+    cout << "Algorithms:" << endl
+         << "-bfs\tBreadth First Search" << endl
+         << "-dfs\tDepth First Search" << endl
+         << "-gdfs\tGreedy Best First Search" << endl
+         << "-ass\tA* Search" << endl
+         << "-bs\tBeam Search" << endl
+         << "-hs\tHill Climbing" << endl;
+    return EXIT_FAILURE;
+}
+
+/* *
  * Main program
  *
  * argc         ISO argument count standard
  * argv         ISO argument variable standard
  *              Name of map file to load
+ *              Algorithm to use
+ *              Frames per second
+ *              Verbose option
  *
  * return       Program EXIT code
  * */
 int main(int argc, char **argv)
 {
-    // There must be 2 arguments:
-    // $program.bin $map.txt
-    if (argc == 2)
+    if (argc > 1)
     {
         // The second argument is the map file name
         string file_name = argv[1];
-        if (check_file(file_name))
+        int algorithm(-1);
+        int window_fps(30);
+        bool verbose(false);
+        // Look for next arguments
+        if (argc > 2)
         {
-            return program_main(file_name);
+            for (int i(2); i < argc; i++)
+            {
+                string arg = argv[i];
+                // Checks for appropriate algorithm
+                string::size_type algo_bfs;
+                algo_bfs = arg.find("-bfs");
+                if (algo_bfs != string::npos)
+                    algorithm = 0;
+                string::size_type algo_dfs;
+                algo_dfs = arg.find("-dfs");
+                if (algo_dfs != string::npos)
+                    algorithm = 1;
+                string::size_type algo_gbfs;
+                algo_gbfs = arg.find("-gbfs");
+                if (algo_gbfs != string::npos)
+                    algorithm = 2;
+                string::size_type algo_ass;
+                algo_ass = arg.find("-ass");
+                if (algo_ass != string::npos)
+                    algorithm = 3;
+                string::size_type algo_bs;
+                algo_bs = arg.find("-bs");
+                if (algo_bs != string::npos)
+                    algorithm = 4;
+                string::size_type algo_hs;
+                algo_hs = arg.find("-hs");
+                if (algo_hs != string::npos)
+                    algorithm = 5;
+                // Check for FPS setting
+                if (regex_match(arg, regex("[0-9]+")))
+                {
+                    cout << "Yes" << endl;
+                    window_fps = stoi(arg);
+                }
+                // Check for verbose mode
+                string::size_type arg_verbose;
+                arg_verbose = arg.find("-v");
+                if (arg_verbose != string::npos)
+                    verbose = true;
+            }
+        }
+        if (check_file(file_name) && algorithm != -1)
+        {
+            return program_main(file_name, algorithm, window_fps, verbose);
         }
         else
-            return EXIT_FAILURE;
+            program_help();
     }
     else
-        return EXIT_FAILURE;
+        program_help();
 } 
