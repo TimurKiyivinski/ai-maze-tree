@@ -2,7 +2,7 @@
 CC = g++
 #CFLAGS are compile flags such as -lm to include <math.h>
 #or -std=c++0x for C++11
-CFLAGS = -std=c++0x -lsfml-graphics -lsfml-window -lsfml-system
+CFLAGS = -std=c++11 -lsfml-graphics -lsfml-window -lsfml-system
 #TARGET is the name of your main file
 TARGET = template
 #OBJECTS = $(TARGET).o library1.o library.o, all the header files here

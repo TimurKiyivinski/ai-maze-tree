@@ -27,18 +27,16 @@ class Space
         // Sets the space heuristic
         void set_heuristic(int H);
         // Returns type if type is start
-        bool is_start();
+        bool is_start() const;
         // Returns type if type is finish
-        bool is_finish();
+        bool is_finish() const;
         // Get coordinates
-        int getX();
-        int getY();
+        int getX() const;
+        int getY() const;
         // Gets the space heuristic
-        int get_heuristic();
+        int get_heuristic() const;
         // Easier to compare
         bool operator==(Space* _compare_space);
-        bool operator<(Space* _compare_space);
-        bool operator>(Space* _compare_space);
         friend std::ostream& operator<<(std::ostream &os, const Space &s);
         friend std::ostream& operator<<(std::ostream &os, const Space *s);
 };

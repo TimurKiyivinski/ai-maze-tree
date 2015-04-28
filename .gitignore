@@ -3,3 +3,4 @@
 *.bin
 .on_cd
 .on_cd_lock
+*.sw*
