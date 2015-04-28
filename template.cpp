@@ -554,8 +554,6 @@ int program_main(string file_name)
         path.push_front(root_node_);
         while (! path.empty())
         {
-            cout << "S" << endl;
-            print_queue(path);
             // Get current state
             tree_node_<Space*> *current_node = path.front();
             path.pop_front();
@@ -611,31 +609,50 @@ int program_main(string file_name)
                 if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
                 {
                     path.push_front(child_node);
-                    cout << "X" << endl;
-                    print_queue(path);
+                }
+                else if (child_space < current_space)
+                {
+                    if (! in_queue(child_space, path))
+                    {
+                        path.push_front(child_node);
+                    }
+                    else
+                    {
+                        for (auto IT = path.begin(); IT != path.end(); IT++)
+                        {
+                            tree_node_<Space*> *IT_node = *IT;
+                            Space *IT_space = IT_node->data;
+                            if (IT_space == child_space)
+                            {
+                                path.erase(IT);
+                            }
+                            path.push_front(child_node);
+                            break;
+                        }
+                    }
                 }
             }
-            cout << "E" << endl;
-            print_queue(path);
+            NodeSpaceMin sorter;
+            sort(path.begin(), path.end(), sorter);
         }
 #endif
 #ifdef ALGO_ASS
         cout << "ASS" << endl;
-        // priority_queue<tree_node_<Space*>*> path;
-        priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> path;
-        priority_queue<tree_node_<Space*>*> dead_path;
+        deque<tree_node_<Space*>*> path;
+        deque<tree_node_<Space*>*> dead_path;
         tree_node_<Space*> *root_node_ = root_node.node;
-        path.push(root_node_);
-        int cost(0);
+        path.push_front(root_node_);
         while (! path.empty())
         {
+            cout << "S" << endl;
+            print_queue(path);
             // Get current state
-            tree_node_<Space*> *current_node = path.top();
-            path.pop();
-            dead_path.push(current_node);
+            tree_node_<Space*> *current_node = path.front();
+            path.pop_front();
+            dead_path.push_front(current_node);
+            cout << "Parent" << endl;
             Space *current_space = current_node->data;
             cout << current_space << endl;
-            cost++;
             
             space_robot = current_space;
             robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
@@ -668,25 +685,28 @@ int program_main(string file_name)
             }
             
             // Find successors
-            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, cost);
+            priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node, 1);
             
-            if (children.size() == 0)
-            {
-                cost--;
-                continue;
-            }
+            if (children.size() == 0) continue;
             
             // Evaluate children
             while (! children.empty())
             {
+                cout << "Children" << endl;
                 tree_node_<Space*> *child_node = children.top();
                 children.pop();
                 Space *child_space = child_node->data;
-                if (! in_queue(child_space, dead_path))
+                cout << child_space << endl;
+                cout << child_space->get_heuristic() << endl;
+                if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
                 {
-                    path.push(child_node);
+                    path.push_front(child_node);
+                    cout << "X" << endl;
+                    print_queue(path);
                 }
             }
+            cout << "E" << endl;
+            print_queue(path);
         }
 #endif
 #ifdef ALGO_BS
