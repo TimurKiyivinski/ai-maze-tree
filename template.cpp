@@ -399,7 +399,7 @@ int program_main(string file_name)
     // Create inital Window
     sf::RenderWindow window(sf::VideoMode(_width, _height), "AI");
     // Optimal speed to view results
-    int window_fps(6);
+    int window_fps(60);
     window.setFramerateLimit(window_fps);
     // Robot begins at starting space
     Space *space_robot = space_start;
@@ -642,10 +642,10 @@ int program_main(string file_name)
         deque<tree_node_<Space*>*> dead_path;
         tree_node_<Space*> *root_node_ = root_node.node;
         path.push_front(root_node_);
+        int g_score(0);
+        int f_score(g_score + space_start->get_heuristic());
         while (! path.empty())
         {
-            cout << "S" << endl;
-            print_queue(path);
             // Get current state
             tree_node_<Space*> *current_node = path.front();
             path.pop_front();
@@ -698,15 +698,13 @@ int program_main(string file_name)
                 Space *child_space = child_node->data;
                 cout << child_space << endl;
                 cout << child_space->get_heuristic() << endl;
-                if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
+                if (in_queue(child_space, dead_path)) continue;
+                int g_child_score(parent_count(child_node) + 1);
+                if (! in_queue(child_space, path))
                 {
                     path.push_front(child_node);
-                    cout << "X" << endl;
-                    print_queue(path);
                 }
             }
-            cout << "E" << endl;
-            print_queue(path);
         }
 #endif
 #ifdef ALGO_BS
