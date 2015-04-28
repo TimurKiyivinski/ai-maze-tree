@@ -18,8 +18,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <algorithm>
+#include <deque>
 #include <vector>
 #include <SFML/Graphics.hpp>
 #include "tree.hh"
@@ -46,7 +48,7 @@ class SpaceMin
     public:
         bool operator() (Space *lhs, Space *rhs)
         {
-            return lhs->get_heuristic() < rhs->get_heuristic();
+            return lhs->get_heuristic() <= rhs->get_heuristic();
         }
 };
 
@@ -58,9 +60,16 @@ class NodeSpaceMin
         {
             Space *sl = lhs->data;
             Space *sr = rhs->data;
-            return sl->get_heuristic() < sr->get_heuristic();
+            return sl->get_heuristic() <= sr->get_heuristic();
         }
 };
+
+string itos(int i)
+{
+    stringstream ss;
+    ss << i;
+    return ss.str();
+}
 
 /* *
  * Returns the manhattan distance between two sets
@@ -109,17 +118,30 @@ int parent_count(tree_node_<Space*> *n)
     return steps;
 }
 
-bool in_queue(Space *s, priority_queue<tree_node_<Space*>*> que)
+bool in_queue(Space *s, deque<tree_node_<Space*>*> que)
 {
     while (! que.empty())
     {
-        tree_node_<Space*> *que_node = que.top();
+        tree_node_<Space*> *que_node = que.front();
         Space *qs = que_node->data;
         if (s == qs)
             return true;
-        que.pop();
+        que.pop_front();
     }
     return false;
+}
+
+void print_queue(deque<tree_node_<Space*>*> que)
+{
+    cout << "Que of size " << que.size() << endl;
+    while (! que.empty())
+    {
+        tree_node_<Space*> *que_node = que.front();
+        Space *qs = que_node->data;
+        cout << qs << endl;
+        que.pop_front();
+    }
+    cout << "Done" << endl;
 }
 
 /* *
@@ -373,10 +395,12 @@ int program_main(string file_name)
      *
      * Use SFML to draw graphics in a separate thread
      * */
+    cout << "Loading graphics" << endl;
     // Create inital Window
     sf::RenderWindow window(sf::VideoMode(_width, _height), "AI");
     // Optimal speed to view results
-    window.setFramerateLimit(60);
+    int window_fps(6);
+    window.setFramerateLimit(window_fps);
     // Robot begins at starting space
     Space *space_robot = space_start;
     // Initial frame counters, explained below
@@ -403,6 +427,11 @@ int program_main(string file_name)
         {
             sf::RectangleShape shape(sf::Vector2f(10, 10));
             shape.setPosition(sf::Vector2f(ii * 10, i * 10));
+            sf::Font font;
+            font.loadFromFile("LSR.ttf");
+            sf::Text text;
+            text.setCharacterSize(10);
+            text.setFont(font); 
             Space *_c = space_matrix[i][ii];
             if (_c == NULL)
                 shape.setFillColor(sf::Color(255, 255, 255));
@@ -411,8 +440,15 @@ int program_main(string file_name)
             else if (_c->is_finish())
                 shape.setFillColor(sf::Color(0, 0, 250));
             else
+            {
                 shape.setFillColor(sf::Color(0, 0, 0));
+                text.setString(itos(_c->get_heuristic()));
+                text.setColor(sf::Color::Green);
+                text.setPosition(sf::Vector2f(_c->getY() * 10, _c->getX() * 10));
+            }
+
             window.draw(shape);
+            window.draw(text);
         }
         
         // Draw out robot
@@ -426,7 +462,7 @@ int program_main(string file_name)
         
         // Skip first 60 frames to avoid initial
         // artifacts that form on startup
-        if (init_frame_count < 60)
+        if (init_frame_count < window_fps)
         {
             window.clear();
             init_frame_count++;
@@ -512,16 +548,19 @@ int program_main(string file_name)
 #endif
 #ifdef ALGO_GBFS
         cout << "GBFS" << endl;
-        priority_queue<tree_node_<Space*>*> path;
-        priority_queue<tree_node_<Space*>*> dead_path;
+        deque<tree_node_<Space*>*> path;
+        deque<tree_node_<Space*>*> dead_path;
         tree_node_<Space*> *root_node_ = root_node.node;
-        path.push(root_node_);
+        path.push_front(root_node_);
         while (! path.empty())
         {
+            cout << "S" << endl;
+            print_queue(path);
             // Get current state
-            tree_node_<Space*> *current_node = path.top();
-            path.pop();
-            dead_path.push(current_node);
+            tree_node_<Space*> *current_node = path.front();
+            path.pop_front();
+            dead_path.push_front(current_node);
+            cout << "Parent" << endl;
             Space *current_space = current_node->data;
             cout << current_space << endl;
             
@@ -563,6 +602,7 @@ int program_main(string file_name)
             // Evaluate children
             while (! children.empty())
             {
+                cout << "Children" << endl;
                 tree_node_<Space*> *child_node = children.top();
                 children.pop();
                 Space *child_space = child_node->data;
@@ -570,9 +610,13 @@ int program_main(string file_name)
                 cout << child_space->get_heuristic() << endl;
                 if (! in_queue(child_space, path) && ! in_queue(child_space, dead_path))
                 {
-                    path.push(child_node);
+                    path.push_front(child_node);
+                    cout << "X" << endl;
+                    print_queue(path);
                 }
             }
+            cout << "E" << endl;
+            print_queue(path);
         }
 #endif
 #ifdef ALGO_ASS
