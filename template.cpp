@@ -29,6 +29,8 @@
 #include "tree_util.hh"
 #include "space.h"
 
+#define BOX_SIZE 25
+
 using namespace std;
 
 // Standard function
@@ -76,7 +78,7 @@ class NodeSpaceMin
             //    if (sl->getY() == sr->getY())
             //        return sl->getX() < sr->getX();
             //}
-            return sl->get_heuristic() < sr->get_heuristic();
+            return sl->get_heuristic() <= sr->get_heuristic();
         }
 };
 
@@ -395,8 +397,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
         space_matrix.push_back(line_vector);
         i++;
     }
-    _width = ii * 10;
-    _height = i * 10;
+    _width = ii * BOX_SIZE;
+    _height = i * BOX_SIZE;
 
     /* *
      * Section: Create Heuristics
@@ -496,12 +498,12 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
         for (int i(0); i < space_matrix.size(); i++)
         for (int ii(0); ii < space_matrix[i].size(); ii++)
         {
-            sf::RectangleShape shape(sf::Vector2f(10, 10));
-            shape.setPosition(sf::Vector2f(ii * 10, i * 10));
+            sf::RectangleShape shape(sf::Vector2f(BOX_SIZE, BOX_SIZE));
+            shape.setPosition(sf::Vector2f(ii * BOX_SIZE, i * BOX_SIZE));
             sf::Font font;
             font.loadFromFile("LSR.ttf");
             sf::Text text;
-            text.setCharacterSize(10);
+            text.setCharacterSize(BOX_SIZE);
             text.setFont(font); 
             Space *_c = space_matrix[i][ii];
             if (_c == NULL)
@@ -515,19 +517,20 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 shape.setFillColor(sf::Color(0, 0, 0));
                 text.setString(itos(_c->get_heuristic()));
                 text.setColor(sf::Color::Green);
-                text.setPosition(sf::Vector2f(_c->getY() * 10, _c->getX() * 10));
+                text.setPosition(sf::Vector2f(_c->getY() * BOX_SIZE, _c->getX() * BOX_SIZE));
             }
 
             window.draw(shape);
-            window.draw(text);
+            if (verbose)
+                window.draw(text);
         }
         
         // Draw out robot
-        sf::RectangleShape robot_shape(sf::Vector2f(10, 10));
-        sf::RectangleShape robot_parent(sf::Vector2f(10, 10));
+        sf::RectangleShape robot_shape(sf::Vector2f(BOX_SIZE, BOX_SIZE));
+        sf::RectangleShape robot_parent(sf::Vector2f(BOX_SIZE, BOX_SIZE));
         robot_shape.setFillColor(sf::Color(250, 0, 0));
         robot_parent.setFillColor(sf::Color(250, 0, 250));
-        robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+        robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
         window.draw(robot_shape);
         window.display();
         
@@ -552,7 +555,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             while (BFS != root_node.end())
             {
                 space_robot = *BFS;
-                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
                 window.display();
                 if (verbose)
@@ -570,8 +573,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     while(!solution_node_parent->data->is_start())
                     {
                         robot_parent.setPosition(sf::Vector2f(
-                                    solution_node_parent->data->getY() * 10,
-                                    solution_node_parent->data->getX() * 10));
+                                    solution_node_parent->data->getY() * BOX_SIZE,
+                                    solution_node_parent->data->getX() * BOX_SIZE));
                         window.draw(robot_parent);
                         window.display();
                         if (verbose)
@@ -592,7 +595,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             while (DFS != root_node.end())
             {
                 space_robot = *DFS;
-                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
                 window.display();
                 if (verbose)
@@ -610,8 +613,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     while(!solution_node_parent->data->is_start())
                     {
                         robot_parent.setPosition(sf::Vector2f(
-                                    solution_node_parent->data->getY() * 10,
-                                    solution_node_parent->data->getX() * 10));
+                                    solution_node_parent->data->getY() * BOX_SIZE,
+                                    solution_node_parent->data->getX() * BOX_SIZE));
                         window.draw(robot_parent);
                         window.display();
                         if (verbose)
@@ -643,7 +646,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     cout << current_space << endl;
 
                 space_robot = current_space;
-                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
                 window.display();
 
@@ -661,8 +664,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     while(!solution_node_parent->data->is_start())
                     {
                         robot_parent.setPosition(sf::Vector2f(
-                                    solution_node_parent->data->getY() * 10,
-                                    solution_node_parent->data->getX() * 10));
+                                    solution_node_parent->data->getY() * BOX_SIZE,
+                                    solution_node_parent->data->getX() * BOX_SIZE));
                         window.draw(robot_parent);
                         window.display();
                         if (verbose)
@@ -735,7 +738,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     cout << current_space << endl;
 
                 space_robot = current_space;
-                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
                 window.display();
 
@@ -753,8 +756,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     while(!solution_node_parent->data->is_start())
                     {
                         robot_parent.setPosition(sf::Vector2f(
-                                    solution_node_parent->data->getY() * 10,
-                                    solution_node_parent->data->getX() * 10));
+                                    solution_node_parent->data->getY() * BOX_SIZE,
+                                    solution_node_parent->data->getX() * BOX_SIZE));
                         window.draw(robot_parent);
                         window.display();
                         if (verbose)
@@ -802,7 +805,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     cout << current_space << endl;
 
                 space_robot = current_space;
-                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
                 window.display();
 
@@ -819,8 +822,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     while(!solution_node_parent->data->is_start())
                     {
                         robot_parent.setPosition(sf::Vector2f(
-                                    solution_node_parent->data->getY() * 10,
-                                    solution_node_parent->data->getX() * 10));
+                                    solution_node_parent->data->getY() * BOX_SIZE,
+                                    solution_node_parent->data->getX() * BOX_SIZE));
                         window.draw(robot_parent);
                         window.display();
                         if (verbose)
@@ -859,7 +862,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     cout << current_space << endl;
 
                 space_robot = current_space;
-                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * 10, space_robot->getX() * 10));
+                robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
                 window.display();
 
@@ -876,8 +879,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     while(!solution_node_parent->data->is_start())
                     {
                         robot_parent.setPosition(sf::Vector2f(
-                                    solution_node_parent->data->getY() * 10,
-                                    solution_node_parent->data->getX() * 10));
+                                    solution_node_parent->data->getY() * BOX_SIZE,
+                                    solution_node_parent->data->getX() * BOX_SIZE));
                         window.draw(robot_parent);
                         window.display();
                         if (verbose)
