@@ -69,7 +69,14 @@ class NodeSpaceMin
         {
             Space *sl = lhs->data;
             Space *sr = rhs->data;
-            return sl->get_heuristic() <= sr->get_heuristic();
+            //if (sl->get_heuristic() == sr->get_heuristic())
+            //{
+            //    if (sl->getX() == sr->getX())
+            //        return sl->getY() < sr->getY();
+            //    if (sl->getY() == sr->getY())
+            //        return sl->getX() < sr->getX();
+            //}
+            return sl->get_heuristic() < sr->get_heuristic();
         }
 };
 
