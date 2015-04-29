@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 #include <algorithm>
+#include <random>
 #include <regex>
 #include <deque>
 #include <vector>
@@ -58,6 +59,14 @@ inline bool operator>(const Space &lhs, const Space &rhs)
     return lhs.get_heuristic() > rhs.get_heuristic();
 }
 
+/* *
+ * Returns the relative direction of
+ * a child Space to a parent Space
+ * using predefined constants
+ *
+ * p            Parent Space
+ * s            Child Space
+ * */
 int get_dir(Space *p, Space *s)
 {
     if (p->getX() == s->getX())
@@ -69,16 +78,6 @@ int get_dir(Space *p, Space *s)
             return DIR_UP;
         else return DIR_DOWN;
 }
-
-// Comparator class for priority queue
-class SpaceMin
-{
-    public:
-        bool operator() (Space *lhs, Space *rhs)
-        {
-            return lhs->get_heuristic() <= rhs->get_heuristic();
-        }
-};
 
 // Comparator class for priority queue
 class NodeSpaceMin
@@ -876,10 +875,16 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
         {
             cout << "HS" << endl;
             tree_node_<Space*> *current_node = root_node.node;
+            deque<tree_node_<Space*>*> visited;
+            // Random number generator, Mersenne Twister
+            random_device random_generator; 
+            uint32_t seed_val;
+            uniform_int_distribution<uint32_t> uint_dist(1, space_tree.size() - 1);
             while (! _finished)
             {
                 // Get current state
                 Space *current_space = current_node->data;
+                visited.push_front(current_node);
                 if (verbose)
                     cout << current_space << endl;
 
@@ -916,7 +921,21 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 // Find successors
                 priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_children(current_node);
 
-                if (children.size() == 0) continue;
+                if (children.size() == 0)
+                {
+                    tree<Space*>::iterator random_node = root_node.begin();
+                    bool random_found(false);
+                    while (! random_found)
+                    {
+                        for (int i(0); i < uint_dist(random_generator); i++)
+                        {
+                            random_node++;
+                        }
+                        if (! in_queue(random_node.node->data, visited))
+                            random_found = true;
+                    }
+                    children.push(random_node.node);
+                }
                 current_node = children.top();
             }
         }
