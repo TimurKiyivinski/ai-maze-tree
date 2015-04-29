@@ -498,6 +498,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
     int init_frame_count(0);
     // Maze solved boolean
     bool _finished(false);
+    // Total expansions made
+    int expansions(0);
     // Window draw loop 
     while (window.isOpen())
     {
@@ -572,6 +574,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             tree<Space*>::breadth_first_queued_iterator BFS(root_node);
             while (BFS != root_node.end())
             {
+                expansions++;
                 space_robot = *BFS;
                 robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
@@ -605,6 +608,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 }
                 BFS++;
             }
+            cout << "Expansions made: " << expansions << endl;
         }
         else if (algorithm == 1)
         {
@@ -612,6 +616,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             tree<Space*>::pre_order_iterator DFS(root_node);
             while (DFS != root_node.end())
             {
+                expansions++;
                 space_robot = *DFS;
                 robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
                 window.draw(robot_shape);
@@ -645,6 +650,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 }
                 DFS++;
             }
+            cout << "Expansions made: " << expansions << endl;
         }
         else if (algorithm == 2)
         {
@@ -655,6 +661,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             path.push_front(root_node_);
             while (! path.empty())
             {
+                expansions++;
                 // Get current state
                 tree_node_<Space*> *current_node = path.front();
                 path.pop_front();
@@ -735,6 +742,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 NodeSpaceMin sorter;
                 sort(path.begin(), path.end(), sorter);
             }
+            cout << "Expansions made: " << expansions << endl;
         }
         else if (algorithm == 3)
         {
@@ -747,6 +755,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             int f_score(g_score + space_start->get_heuristic());
             while (! path.empty())
             {
+                expansions++;
                 // Get current state
                 tree_node_<Space*> *current_node = path.front();
                 path.pop_front();
@@ -808,6 +817,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 NodeSpaceMin sorter;
                 sort(path.begin(), path.end(), sorter);
             }
+            cout << "Expansions made: " << expansions << endl;
         }
         else if (algorithm == 4)
         {
@@ -818,6 +828,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             int beam_size(1);
             while (! _finished)
             {
+                expansions++;
                 // Get current state
                 tree_node_<Space*> *current_node = path.front();
                 Space *current_space = current_node->data;
@@ -888,6 +899,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 }
                 sort(path.begin(), path.end(), sorter);
             }
+            cout << "Expansions made: " << expansions << endl;
         }
         else if (algorithm == 5)
         {
@@ -900,6 +912,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             uniform_int_distribution<uint32_t> uint_dist(1, space_tree.size() - 1);
             while (! _finished)
             {
+                expansions++;
                 // Get current state
                 Space *current_space = current_node->data;
                 visited.push_front(current_node);
@@ -956,8 +969,10 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 }
                 current_node = children.top();
             }
+            cout << "Expansions made: " << expansions << endl;
         }
         if (!_finished) window.clear();
+        //if (_finished) window.close();
     }
 
     /* *
