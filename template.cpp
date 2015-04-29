@@ -1,5 +1,4 @@
 /*  Introduction to Artificial Intelligence Assignment 1
- *  Sorts mazes with <name> algorithm.
  *  Copyright (C) 2015 Timothy Kiyui & Brian Sim
 
  *  This program is free software: you can redistribute it and/or modify
@@ -816,11 +815,11 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             deque<tree_node_<Space*>*> path;
             tree_node_<Space*> *root_node_ = root_node.node;
             path.push_front(root_node_);
-            while (! path.empty())
+            int beam_size(1);
+            while (! _finished)
             {
                 // Get current state
                 tree_node_<Space*> *current_node = path.front();
-                path.pop_front();
                 Space *current_space = current_node->data;
                 if (verbose)
                     cout << current_space << endl;
@@ -833,6 +832,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 // If we have found the solution
                 if (current_space->is_finish())
                 {
+                    cout << "Solved" << endl;
                     _finished = true;
                     // Get finished node
                     tree_node_<Space*> solution_node = *current_node;
@@ -856,19 +856,37 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                     break;
                 }
 
-                // Find successors
-                priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_breadth(current_node);
-
-                if (children.size() == 0) continue;
-
-                // Evaluate children
-                while (! children.empty())
+                priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> b_children;
+                NodeSpaceMin sorter;
+                for (int i(0); i < path.size(); i++)
                 {
-                    tree_node_<Space*> *child_node = children.top();
-                    children.pop();
-                    Space *child_space = child_node->data;
-                    path.push_front(child_node);
+                    tree_node_<Space*> *path_node = path.front();
+                    path.pop_front();
+                    // Find successors
+                    priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> children = get_breadth(path_node);
+
+                    if (children.size() == 0) continue;
+
+                    // Evaluate children
+                    while (! children.empty())
+                    {
+                        tree_node_<Space*> *child_node = children.top();
+                        children.pop();
+                        Space *child_space = child_node->data;
+                        b_children.push(child_node);
+                        
+                        space_robot = child_space;
+                        robot_shape.setPosition(sf::Vector2f(space_robot->getY() * BOX_SIZE, space_robot->getX() * BOX_SIZE));
+                        window.draw(robot_shape);
+                        window.display();
+                    }
                 }
+                while (! b_children.empty())
+                {
+                    path.push_back(b_children.top());
+                    b_children.pop();
+                }
+                sort(path.begin(), path.end(), sorter);
             }
         }
         else if (algorithm == 5)
