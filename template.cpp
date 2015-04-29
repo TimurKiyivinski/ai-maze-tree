@@ -29,7 +29,12 @@
 #include "tree_util.hh"
 #include "space.h"
 
-#define BOX_SIZE 25
+// Constants
+#define BOX_SIZE 20
+#define DIR_UP 0
+#define DIR_LEFT 1
+#define DIR_DOWN 2
+#define DIR_RIGHT 3
 
 using namespace std;
 
@@ -53,6 +58,18 @@ inline bool operator>(const Space &lhs, const Space &rhs)
     return lhs.get_heuristic() > rhs.get_heuristic();
 }
 
+int get_dir(Space *p, Space *s)
+{
+    if (p->getX() == s->getX())
+        if (p->getY() > s->getY())
+            return DIR_LEFT;
+        else return DIR_RIGHT;
+    if (p->getY() == s->getY())
+        if (p->getX() > s->getX())
+            return DIR_UP;
+        else return DIR_DOWN;
+}
+
 // Comparator class for priority queue
 class SpaceMin
 {
@@ -71,14 +88,17 @@ class NodeSpaceMin
         {
             Space *sl = lhs->data;
             Space *sr = rhs->data;
-            //if (sl->get_heuristic() == sr->get_heuristic())
-            //{
-            //    if (sl->getX() == sr->getX())
-            //        return sl->getY() < sr->getY();
-            //    if (sl->getY() == sr->getY())
-            //        return sl->getX() < sr->getX();
-            //}
-            return sl->get_heuristic() <= sr->get_heuristic();
+            if (sl->get_heuristic() == sr->get_heuristic())
+            {
+                tree_node_<Space*> *pl = lhs->parent;
+                tree_node_<Space*> *pr = rhs->parent;
+                Space *ls = pl->data;
+                Space *rs = pr->data;
+                int ldir = get_dir(ls, sl);
+                int rdir = get_dir(rs, sr);
+                return ldir < rdir;
+            }
+            return sl->get_heuristic() < sr->get_heuristic();
         }
 };
 
@@ -289,7 +309,7 @@ priority_queue<tree_node_<Space*>*, vector<tree_node_<Space*>*>, NodeSpaceMin> g
         if (c)
         {
             Space *s = child_node->data;
-            s->set_heuristic(s->get_init_heuristic() + parent_count(child_node) + c);
+            s->set_heuristic(s->get_init_heuristic() + parent_count(child_node) + 1);
         }
         children.push(child_node);
     }
@@ -416,7 +436,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
         if (i == 0)
         {
             if (verbose)
-                cout << "###\t";
+                cout << "x#y\t";
             for (int ii(0); ii < space_matrix[i].size(); ii++)
                 if (verbose)
                     cout << ii << "\t";
@@ -787,6 +807,8 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                         path.push_front(child_node);
                     }
                 }
+                NodeSpaceMin sorter;
+                sort(path.begin(), path.end(), sorter);
             }
         }
         else if (algorithm == 4)
