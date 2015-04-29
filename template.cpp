@@ -627,7 +627,6 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
             path.push_front(root_node_);
             while (! path.empty())
             {
-                cout << "Solved" << endl;
                 // Get current state
                 tree_node_<Space*> *current_node = path.front();
                 path.pop_front();
@@ -644,6 +643,7 @@ int program_main(string file_name, int algorithm, int window_fps = 30, bool verb
                 // If we have found the solution
                 if (current_space->is_finish())
                 {
+                    cout << "Solved" << endl;
                     _finished = true;
                     // Get finished node
                     tree_node_<Space*> solution_node = *current_node;
