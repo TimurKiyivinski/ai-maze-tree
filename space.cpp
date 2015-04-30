@@ -56,3 +56,15 @@ std::ostream& operator<<(std::ostream &os, const Space *s)
     os << s->x << " " << s->y;
     return os;
 }
+
+// Space < operator overload
+inline bool operator<(const Space &lhs, const Space &rhs)
+{
+    return lhs.get_heuristic() < rhs.get_heuristic();
+}
+
+// Space > operator overload
+inline bool operator>(const Space &lhs, const Space &rhs)
+{
+    return lhs.get_heuristic() > rhs.get_heuristic();
+}

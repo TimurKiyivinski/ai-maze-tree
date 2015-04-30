@@ -6,7 +6,7 @@ CFLAGS = -std=c++11 -lsfml-graphics -lsfml-window -lsfml-system
 #TARGET is the name of your main file
 TARGET = template
 #OBJECTS = $(TARGET).o library1.o library.o, all the header files here
-OBJECTS = $(TARGET).o space.o
+OBJECTS = $(TARGET).o space.o shared.o node_space.o bfs.o dfs.o gbfs.o ass.o bs.o hs.o
 #EXTRA is for command line arguments
 EXTRA? = ""
 
