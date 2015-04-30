@@ -75,27 +75,6 @@ bool do_gbfs(
             {
                 path.push_front(child_node);
             }
-            else if (child_space < current_space)
-            {
-                if (! in_queue(child_space, path))
-                {
-                    path.push_front(child_node);
-                }
-                else
-                {
-                    for (auto IT = path.begin(); IT != path.end(); IT++)
-                    {
-                        tree_node_<Space*> *IT_node = *IT;
-                        Space *IT_space = IT_node->data;
-                        if (IT_space == child_space)
-                        {
-                            path.erase(IT);
-                        }
-                        path.push_front(child_node);
-                        break;
-                    }
-                }
-            }
         }
         NodeSpaceMin sorter;
         sort(path.begin(), path.end(), sorter);
