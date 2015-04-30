@@ -12,11 +12,11 @@ EXTRA? = ""
 
 #Do not modify
 $(TARGET) : clean $(OBJECTS)
-	$(CC) $(CFLAGS) $(EXTRA) $(OBJECTS) -o $(TARGET).bin 
+	$(CC) $(CFLAGS) $(EXTRA) $(OBJECTS) -o maze_solver
 
 #%.c or %.cpp
 %.o : %.cpp
 	$(CC) $(CFLAGS) $(EXTRA) -c $<
 
 clean:
-	rm -rvf $(OBJECTS) $(TARGET).bin *~
+	rm -rvf $(OBJECTS) $(TARGET).bin maze_solver *~
